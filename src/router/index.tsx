@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate } from 'react-router-dom'
+import { createHashRouter, Navigate } from 'react-router-dom'
 import { lazy, Suspense } from 'react'
 import MainLayout from '@/layouts/MainLayout'
 import MapLayout from '@/layouts/MapLayout'
@@ -26,7 +26,7 @@ const HydrologyPage = lazy(() => import('@/pages/HydrologyPage'))
 const SettingsPage = lazy(() => import('@/pages/SettingsPage'))
 const OfflinePage = lazy(() => import('@/pages/OfflinePage'))
 
-export const router = createBrowserRouter([
+export const router = createHashRouter([
   {
     path: '/',
     element: <MainLayout />,

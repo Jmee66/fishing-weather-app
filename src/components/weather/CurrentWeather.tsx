@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useWeather } from '@/hooks/useWeather'
 import { useSettingsStore } from '@/stores/settings.store'
 import { formatTemperature } from '@/utils/units'
@@ -47,12 +48,12 @@ export default function CurrentWeather() {
         <p className="text-sm font-semibold text-red-300">⚠ Erreur météo</p>
         <p className="text-xs text-red-400">{msg}</p>
         {isApiKey && (
-          <a
-            href="/fishing-weather-app/settings"
+          <Link
+            to="/settings"
             className="inline-block text-xs text-sky-400 underline"
           >
             → Configurer les clés API dans les Paramètres
-          </a>
+          </Link>
         )}
       </div>
     )
