@@ -169,37 +169,60 @@ export default function HomePage() {
         {/* Erreur géoloc */}
         {locationError && (
           <div
-            className="mt-2 rounded-xl border p-3 space-y-2"
+            className="mt-2 rounded-xl border p-3 space-y-2.5"
             style={{ backgroundColor: 'rgb(127 29 29 / 0.2)', borderColor: 'rgb(185 28 28 / 0.4)' }}
           >
-            <div className="flex items-start gap-2">
-              <span className="text-red-400 flex-shrink-0 text-base leading-tight">⚠</span>
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-red-300">{locationError}</p>
-                {locationErrorCode === 1 && (
-                  <p className="text-xs text-red-400/70 mt-1">
-                    Sur iPhone : Réglages → Confidentialité → Service de localisation → Safari/Chrome → "Lors de l'utilisation"
-                  </p>
-                )}
-                {locationErrorCode === 2 && (
-                  <p className="text-xs text-red-400/70 mt-1">
-                    Astuce : allez à l'extérieur ou activez le Wi-Fi pour aider le GPS.
-                  </p>
-                )}
-              </div>
+            {/* Titre erreur */}
+            <div className="flex items-center gap-2">
+              <span className="text-red-400 text-base">⚠</span>
+              <p className="text-sm font-semibold text-red-300">{locationError}</p>
             </div>
+
+            {/* Instructions code 1 — permission refusée */}
+            {locationErrorCode === 1 && (
+              <div className="space-y-1.5 text-xs text-red-300/80">
+                <p className="font-medium text-red-200">Autorisez la localisation :</p>
+                <div className="space-y-1 pl-2 border-l-2 border-red-800/60">
+                  <p><span className="font-medium text-slate-300">iPhone/iPad :</span> Réglages → Confidentialité → Service de localisation → {'{'}navigateur{'}'} → <em>Lors de l'utilisation</em></p>
+                  <p><span className="font-medium text-slate-300">Android :</span> Paramètres → Applications → {'{'}navigateur{'}'} → Autorisations → Localisation → <em>Autoriser</em></p>
+                  <p><span className="font-medium text-slate-300">Desktop :</span> Clic sur 🔒 dans la barre d'adresse → Localisation → <em>Autoriser</em></p>
+                </div>
+              </div>
+            )}
+
+            {/* Instructions code 2 — position indisponible */}
+            {locationErrorCode === 2 && (
+              <div className="space-y-1.5 text-xs text-red-300/80">
+                <p className="font-medium text-red-200">Causes possibles :</p>
+                <div className="space-y-1 pl-2 border-l-2 border-red-800/60">
+                  <p>📍 Services de localisation désactivés → <span className="text-slate-300">Réglages → Confidentialité → Service de localisation → <em>Activer</em></span></p>
+                  <p>📶 Activez le Wi-Fi (même sans connexion) — il aide le GPS à se localiser</p>
+                  <p>🌤 Allez à l'extérieur, le GPS a besoin du ciel dégagé</p>
+                </div>
+              </div>
+            )}
+
+            {/* Instructions code 3 — timeout */}
+            {locationErrorCode === 3 && (
+              <p className="text-xs text-red-300/70">
+                Le GPS a pris trop de temps. Vérifiez votre connexion et réessayez à l'extérieur.
+              </p>
+            )}
+
+            {/* Bouton réessayer (codes 2 et 3) */}
             {locationErrorCode !== 1 && (
               <button
                 onClick={locate}
                 disabled={isLocating}
-                className="w-full py-1.5 rounded-lg text-xs font-semibold transition-colors"
-                style={{ backgroundColor: 'rgb(185 28 28 / 0.3)', color: '#fca5a5' }}
+                className="w-full py-2 rounded-lg text-xs font-semibold transition-opacity active:scale-[0.98] disabled:opacity-50"
+                style={{ backgroundColor: 'rgb(185 28 28 / 0.35)', color: '#fca5a5' }}
               >
-                {isLocating ? 'Localisation…' : '↺ Réessayer la géolocalisation'}
+                {isLocating ? '⏳ Localisation en cours…' : '↺  Réessayer'}
               </button>
             )}
-            <p className="text-xs text-red-400/60 text-center">
-              Ou recherchez un lieu manuellement ci-dessus ↑
+
+            <p className="text-[11px] text-red-400/50 text-center pt-0.5">
+              ou recherchez un lieu manuellement ↑
             </p>
           </div>
         )}

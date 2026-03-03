@@ -5,9 +5,9 @@ import { useLocationStore } from '@/stores/location.store'
 export type GeoErrorCode = 1 | 2 | 3 | null
 
 const GEO_MESSAGES: Record<number, string> = {
-  1: 'Permission refusée — autorisez la localisation dans les réglages du navigateur/système',
-  2: 'Position indisponible — GPS ou réseau non prêt, réessayez dans quelques secondes',
-  3: 'Délai dépassé — réessayez',
+  1: 'Accès à la localisation refusé',
+  2: 'Localisation indisponible',
+  3: 'Délai dépassé',
 }
 
 export function useGeolocation() {
