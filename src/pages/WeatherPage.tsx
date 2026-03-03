@@ -90,7 +90,7 @@ export default function WeatherPage() {
 
       {error && (
         <Alert type="error" title="Erreur météo">
-          Impossible de charger les données météo. Vérifiez votre connexion.
+          {error instanceof Error ? error.message : 'Impossible de charger les données météo. Vérifiez votre connexion.'}
         </Alert>
       )}
 

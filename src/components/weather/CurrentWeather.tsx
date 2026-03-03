@@ -10,8 +10,22 @@ import {
   IconPartlyCloud, IconHumidity, IconPressure, IconUV, IconVisibility
 } from '@/components/ui/icons/WeatherIcons'
 
-/** Choisit l'icône weather flat selon le code OWM */
+/** Choisit l'icône weather flat selon le code WMO (Open-Meteo) ou OWM */
 function WeatherIcon({ code, size = 56 }: { code: number; size?: number }) {
+  // WMO codes (Open-Meteo) : 0–99
+  if (code <= 99) {
+    if (code === 0 || code === 1) return <IconSun size={size} />
+    if (code === 2) return <IconPartlyCloud size={size} />
+    if (code === 3) return <IconCloud size={size} />
+    if (code === 45 || code === 48) return <IconCloud size={size} />
+    if (code >= 51 && code <= 67) return <IconRain size={size} />
+    if (code >= 71 && code <= 77) return <IconSnow size={size} />
+    if (code >= 80 && code <= 82) return <IconRain size={size} />
+    if (code >= 85 && code <= 86) return <IconSnow size={size} />
+    if (code >= 95) return <IconStorm size={size} />
+    return <IconCloud size={size} />
+  }
+  // OWM codes : 200–804
   if (code >= 200 && code < 300) return <IconStorm size={size} />
   if (code >= 300 && code < 600) return <IconRain size={size} />
   if (code >= 600 && code < 700) return <IconSnow size={size} />
@@ -25,7 +39,24 @@ export default function CurrentWeather() {
   const units = useSettingsStore((s) => s.units)
 
   if (isLoading) return <div className="flex justify-center p-8"><Spinner size="lg" /></div>
-  if (error) return <div className="p-4 text-red-600 text-sm">Impossible de charger la météo. Vérifiez votre connexion.</div>
+  if (error) {
+    const msg = error instanceof Error ? error.message : 'Erreur inconnue'
+    const isApiKey = msg.toLowerCase().includes('clé') || msg.toLowerCase().includes('api')
+    return (
+      <div className="p-4 rounded-xl border border-red-800/40 bg-red-950/20 space-y-2">
+        <p className="text-sm font-semibold text-red-300">⚠ Erreur météo</p>
+        <p className="text-xs text-red-400">{msg}</p>
+        {isApiKey && (
+          <a
+            href="/fishing-weather-app/settings"
+            className="inline-block text-xs text-sky-400 underline"
+          >
+            → Configurer les clés API dans les Paramètres
+          </a>
+        )}
+      </div>
+    )
+  }
   if (!data?.current) return null
 
   const c = data.current
@@ -60,7 +91,7 @@ export default function CurrentWeather() {
         </div>
         <div className="flex flex-col items-center gap-1 p-2 rounded-xl" style={{ backgroundColor: 'var(--bg-base)' }}>
           <IconVisibility size={24} />
-          <span className="text-xs font-semibold text-slate-200">{(c.visibility).toFixed(0)}</span>
+          <span className="text-xs font-semibold text-slate-200">{(c.visibility / 1000).toFixed(1)}</span>
           <span className="text-[10px] text-slate-500">km</span>
         </div>
         {c.uvi > 0 ? (
