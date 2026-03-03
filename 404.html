@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>FishWeather</title>
+    <script>
+      // Technique SPA pour GitHub Pages :
+      // On encode l'URL complète dans le query string et on redirige vers index.html
+      // qui la décode et restaure l'URL via history.replaceState
+      var l = window.location
+      l.replace(
+        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+        l.pathname.split('/').slice(0, 2).join('/') +
+        '/?p=' + encodeURIComponent(
+          l.pathname.slice(l.pathname.split('/').slice(0, 2).join('/').length) +
+          (l.search ? l.search : '') +
+          (l.hash ? l.hash : '')
+        )
+      )
+    </script>
+  </head>
+  <body></body>
+</html>
