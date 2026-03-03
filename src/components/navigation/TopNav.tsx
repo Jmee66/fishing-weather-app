@@ -20,7 +20,7 @@ export default function TopNav() {
   const currentPosition = useLocationStore((s) => s.currentPosition)
 
   const title = PAGE_TITLES[location.pathname] ?? 'FishWeather'
-  const locationName = selectedLocation?.name ?? (currentPosition ? 'Position GPS' : 'Aucune position')
+  const locationName = selectedLocation?.name ?? currentPosition?.name ?? (currentPosition ? 'Position GPS' : 'Aucune position')
   const hasGPS = !!currentPosition && !selectedLocation
   const isHome = location.pathname === '/'
 

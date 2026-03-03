@@ -239,7 +239,7 @@ export default function HomePage() {
               <span className="text-sky-400 flex-shrink-0"><IconPin /></span>
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-slate-100 truncate">
-                  {selectedLocation?.name ?? 'Position GPS'}
+                  {selectedLocation?.name ?? currentPosition?.name ?? 'Position GPS'}
                 </p>
                 <p className="text-xs text-slate-500 font-mono">
                   {activeCoords.lat.toFixed(4)}°, {activeCoords.lon.toFixed(4)}°

@@ -12,7 +12,7 @@ export interface FavouriteLocation {
 }
 
 interface LocationState {
-  currentPosition: (Coordinates & { accuracy?: number; timestamp?: number }) | null
+  currentPosition: (Coordinates & { accuracy?: number; timestamp?: number; name?: string }) | null
   selectedLocation: (Coordinates & { name: string }) | null
   favourites: FavouriteLocation[]
   isLocating: boolean
