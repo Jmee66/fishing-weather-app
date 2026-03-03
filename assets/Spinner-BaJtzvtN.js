@@ -1,0 +1,1 @@
+import{j as o}from"./vendor-query-kPgIHyrB.js";function t({size:r="md",className:e=""}){const n=r==="sm"?"w-4 h-4 border-2":r==="lg"?"w-12 h-12 border-4":"w-8 h-8 border-4";return o.jsx("div",{className:`${n} border-blue-600 border-t-transparent rounded-full animate-spin ${e}`})}export{t as S};
