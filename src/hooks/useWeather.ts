@@ -6,8 +6,13 @@ import type { Coordinates } from '@/types'
 
 export function useWeather(coordsOverride?: Coordinates) {
   const { weatherSource, weatherModel } = useSettingsStore()
-  const getActiveLocation = useLocationStore((s) => s.getActiveLocation)
-  const coords = coordsOverride ?? getActiveLocation()
+  const selectedLat = useLocationStore((s) => s.selectedLocation?.lat)
+  const selectedLon = useLocationStore((s) => s.selectedLocation?.lon)
+  const currentLat  = useLocationStore((s) => s.currentPosition?.lat)
+  const currentLon  = useLocationStore((s) => s.currentPosition?.lon)
+  const lat = coordsOverride?.lat ?? selectedLat ?? currentLat
+  const lon = coordsOverride?.lon ?? selectedLon ?? currentLon
+  const coords: Coordinates | null = lat != null && lon != null ? { lat, lon } : null
 
   return useQuery({
     queryKey: ['weather', coords?.lat, coords?.lon, weatherSource, weatherModel],

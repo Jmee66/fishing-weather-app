@@ -32,7 +32,13 @@ function wmoIcon(code: number): string {
 
 export default function WeatherPage() {
   const [tab, setTab] = useState('current')
-  const coords = useLocationStore((s) => s.getActiveLocation())
+  const selectedLat = useLocationStore((s) => s.selectedLocation?.lat)
+  const selectedLon = useLocationStore((s) => s.selectedLocation?.lon)
+  const currentLat  = useLocationStore((s) => s.currentPosition?.lat)
+  const currentLon  = useLocationStore((s) => s.currentPosition?.lon)
+  const lat = selectedLat ?? currentLat
+  const lon = selectedLon ?? currentLon
+  const coords = lat != null && lon != null ? { lat, lon } : null
   const { weatherModel, units, setWeatherModel } = useSettingsStore()
   const { data, isLoading, error } = useWeather(coords ?? undefined)
 

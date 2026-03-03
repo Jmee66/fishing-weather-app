@@ -15,7 +15,13 @@ L.Icon.Default.mergeOptions({
 export default function MapPage() {
   const mapRef = useRef<HTMLDivElement>(null)
   const leafletMap = useRef<L.Map | null>(null)
-  const coords = useLocationStore((s) => s.getActiveLocation())
+  const selectedLat = useLocationStore((s) => s.selectedLocation?.lat)
+  const selectedLon = useLocationStore((s) => s.selectedLocation?.lon)
+  const currentLat  = useLocationStore((s) => s.currentPosition?.lat)
+  const currentLon  = useLocationStore((s) => s.currentPosition?.lon)
+  const lat = selectedLat ?? currentLat
+  const lon = selectedLon ?? currentLon
+  const coords = lat != null && lon != null ? { lat, lon } : null
   const { locate, isLocating } = useGeolocation()
 
   useEffect(() => {

@@ -16,7 +16,13 @@ import { fr } from 'date-fns/locale'
 
 export default function MarinePage() {
   const [tab, setTab] = useState('summary')
-  const coords = useLocationStore((s) => s.getActiveLocation())
+  const selectedLat = useLocationStore((s) => s.selectedLocation?.lat)
+  const selectedLon = useLocationStore((s) => s.selectedLocation?.lon)
+  const currentLat  = useLocationStore((s) => s.currentPosition?.lat)
+  const currentLon  = useLocationStore((s) => s.currentPosition?.lon)
+  const lat = selectedLat ?? currentLat
+  const lon = selectedLon ?? currentLon
+  const coords = lat != null && lon != null ? { lat, lon } : null
   const { units } = useSettingsStore()
   const { data: marine, isLoading: marineLoading, error: marineError } = useMarineWeather(coords ?? undefined)
   const { data: tides, isLoading: tidesLoading } = useTides(coords ?? undefined)

@@ -68,7 +68,13 @@ function StationCard({ item }: { item: HydrologyData }) {
 }
 
 export default function HydrologyPage() {
-  const coords = useLocationStore((s) => s.getActiveLocation())
+  const selectedLat = useLocationStore((s) => s.selectedLocation?.lat)
+  const selectedLon = useLocationStore((s) => s.selectedLocation?.lon)
+  const currentLat  = useLocationStore((s) => s.currentPosition?.lat)
+  const currentLon  = useLocationStore((s) => s.currentPosition?.lon)
+  const lat = selectedLat ?? currentLat
+  const lon = selectedLon ?? currentLon
+  const coords = lat != null && lon != null ? { lat, lon } : null
   const { data, isLoading, error } = useVigicrues(coords ?? undefined)
 
   if (!coords) {
