@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -59,6 +59,8 @@ export default function LogEntryForm({ spots, entryToEdit, onSave, onClose }: Lo
     })) ?? []
   )
   const [rating, setRating] = useState<1 | 2 | 3 | 4 | 5>(entryToEdit?.rating ?? 3)
+  const [spotDropdownOpen, setSpotDropdownOpen] = useState(false)
+  const spotDropdownRef = useRef<HTMLDivElement>(null)
 
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -171,19 +173,54 @@ export default function LogEntryForm({ spots, entryToEdit, onSave, onClose }: Lo
             </div>
           </div>
 
-          {/* Spot */}
+          {/* Spot — sélecteur custom dark-theme */}
           <div>
             <label className="text-xs text-slate-400 mb-1 block">Spot de pêche *</label>
-            <select
-              value={selectedSpotId}
-              onChange={(e) => handleSpotChange(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl border text-sm text-slate-100 outline-none focus:border-sky-600 bg-[var(--bg-surface)] border-[var(--border-default)]"
-            >
-              <option value="">— Sélectionner un spot —</option>
-              {spots.map((s) => (
-                <option key={s.id} value={s.id}>{s.name}</option>
-              ))}
-            </select>
+            <div ref={spotDropdownRef} className="relative">
+              <button
+                type="button"
+                onClick={() => setSpotDropdownOpen((o) => !o)}
+                className="w-full px-3 py-2 rounded-xl border text-sm text-left outline-none transition-colors flex items-center justify-between"
+                style={{
+                  backgroundColor: 'var(--bg-surface)',
+                  borderColor: spotDropdownOpen ? 'rgb(56 189 248 / 0.6)' : 'var(--border-default)',
+                  color: selectedSpotId ? 'rgb(226 232 240)' : 'var(--text-secondary)',
+                }}
+              >
+                <span className="truncate">
+                  {selectedSpotId
+                    ? spots.find((s) => s.id === selectedSpotId)?.name ?? '— Sélectionner —'
+                    : '— Sélectionner un spot —'}
+                </span>
+                <span className="text-slate-500 ml-2 flex-shrink-0">{spotDropdownOpen ? '▲' : '▼'}</span>
+              </button>
+              {spotDropdownOpen && (
+                <div
+                  className="absolute top-full left-0 right-0 mt-1 rounded-xl border overflow-hidden z-50 shadow-xl"
+                  style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-default)' }}
+                >
+                  {spots.length === 0 ? (
+                    <div className="px-3 py-2.5 text-xs text-slate-500">Aucun spot enregistré</div>
+                  ) : (
+                    spots.map((s) => (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => { handleSpotChange(s.id); setSpotDropdownOpen(false) }}
+                        className="w-full text-left px-3 py-2.5 text-sm transition-colors border-b last:border-0"
+                        style={{
+                          backgroundColor: selectedSpotId === s.id ? 'rgb(14 165 233 / 0.15)' : 'transparent',
+                          color: selectedSpotId === s.id ? 'rgb(125 211 252)' : 'rgb(203 213 225)',
+                          borderColor: 'var(--border-subtle)',
+                        }}
+                      >
+                        {s.name}
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
             {errors.spotId && <p className="text-xs text-red-400 mt-1">Sélectionnez un spot</p>}
           </div>
 

@@ -51,7 +51,7 @@ export default function LocationSearch() {
           {results.slice(0, 6).map((r, i) => (
             <button
               key={i}
-              className="w-full text-left px-3 py-2.5 text-sm text-slate-200 hover:bg-[var(--bg-elevated)] border-b border-slate-50 last:border-0"
+              className="w-full text-left px-3 py-2.5 text-sm text-slate-200 hover:bg-[var(--bg-elevated)] border-b border-[var(--border-subtle)] last:border-0"
               onClick={() => selectResult(r)}
             >
               <div className="font-medium truncate">{r.displayName.split(",")[0]}</div>

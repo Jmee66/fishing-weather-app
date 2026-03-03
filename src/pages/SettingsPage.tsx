@@ -209,7 +209,7 @@ export default function SettingsPage() {
             { name: 'OpenSeaMap', desc: 'Marques nautiques', ok: true },
             { name: 'SHOM WPS (marées)', desc: 'Prédictions marées', ok: true },
           ].map(({ name, desc, ok }) => (
-            <div key={name} className="flex items-center justify-between py-1.5 border-b border-slate-50 last:border-0">
+            <div key={name} className="flex items-center justify-between py-1.5 border-b border-[var(--border-subtle)] last:border-0">
               <div>
                 <div className="font-medium text-slate-100">{name}</div>
                 <div className="text-xs text-slate-500">{desc}</div>
