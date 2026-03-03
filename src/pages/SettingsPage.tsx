@@ -131,9 +131,12 @@ export default function SettingsPage() {
         </div>
       </Card>
 
-      <p className="text-xs text-slate-500 text-center pb-2">
-        FishWeather v1.0 — PWA React/TypeScript
-      </p>
+      <div className="text-center pb-2 space-y-1">
+        <p className="text-xs text-slate-500">
+          FishWeather <span className="font-mono text-slate-400">v{__APP_VERSION__}</span>
+        </p>
+        <p className="text-[10px] text-slate-600">PWA React 19 · TypeScript 5 · Vite 7</p>
+      </div>
     </div>
   )
 }
