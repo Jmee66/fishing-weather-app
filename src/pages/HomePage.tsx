@@ -5,23 +5,12 @@ import { useLocationStore } from '@/stores/location.store'
 import type { FavouriteLocation } from '@/stores/location.store'
 import { geocodingService } from '@/services/api/geocoding.service'
 import type { GeocodingResult } from '@/types'
+import { IconGPS, IconStar, IconMap, IconSun, IconWave, IconFish, IconMoon, IconRiver } from '@/components/ui/icons/WeatherIcons'
 
-// ── Icônes SVG ──────────────────────────────────────────────────────────────
-const IconGPS = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9"/>
-    <line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/>
-    <line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/>
-  </svg>
-)
+// ── Icônes SVG simples (non disponibles dans WeatherIcons) ───────────────────
 const IconSearch = () => (
   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-  </svg>
-)
-const IconStar = ({ filled }: { filled?: boolean }) => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
   </svg>
 )
 const IconTrash = () => (
@@ -37,12 +26,12 @@ const IconPin = () => (
 
 // ── Liens rapides ────────────────────────────────────────────────────────────
 const QUICK_LINKS = [
-  { to: '/weather',   label: 'Météo',       desc: 'Prévisions 7 jours' },
-  { to: '/marine',    label: 'Marine',      desc: 'Vagues & marées' },
-  { to: '/map',       label: 'Carte',       desc: 'Spots & navigation' },
-  { to: '/fishing',   label: 'Pêche',       desc: 'Carnet & conditions' },
-  { to: '/ephemeris', label: 'Éphéméride',  desc: 'Soleil & lune' },
-  { to: '/hydrology', label: 'Vigicrues',   desc: 'Débits rivières' },
+  { to: '/weather',   label: 'Météo',       desc: 'Prévisions 7 jours', Icon: IconSun },
+  { to: '/marine',    label: 'Marine',      desc: 'Vagues & marées',    Icon: IconWave },
+  { to: '/map',       label: 'Carte',       desc: 'Spots & navigation', Icon: IconMap },
+  { to: '/fishing',   label: 'Pêche',       desc: 'Carnet & conditions',Icon: IconFish },
+  { to: '/ephemeris', label: 'Éphéméride',  desc: 'Soleil & lune',      Icon: IconMoon },
+  { to: '/hydrology', label: 'Vigicrues',   desc: 'Débits rivières',    Icon: IconRiver },
 ]
 
 // ── Catégorie ────────────────────────────────────────────────────────────────
@@ -238,8 +227,8 @@ export default function HomePage() {
           className="rounded-2xl border p-6 text-center space-y-3"
           style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-default)' }}
         >
-          <div className="w-12 h-12 rounded-full bg-sky-900/30 flex items-center justify-center mx-auto">
-            <span className="text-sky-400"><IconPin /></span>
+          <div className="w-14 h-14 rounded-2xl bg-sky-900/20 flex items-center justify-center mx-auto">
+            <IconGPS size={36} />
           </div>
           <div>
             <p className="text-sm font-semibold text-slate-200">Aucune position</p>
@@ -302,13 +291,18 @@ export default function HomePage() {
           Navigation
         </h2>
         <div className="grid grid-cols-2 gap-2">
-          {QUICK_LINKS.map(({ to, label, desc }) => (
+          {QUICK_LINKS.map(({ to, label, desc, Icon }) => (
             <Link key={to} to={to}
-              className="rounded-xl border p-3 transition-colors active:scale-[0.98]"
+              className="rounded-xl border p-3 flex items-center gap-3 transition-all active:scale-[0.97] hover:border-[var(--border-muted)]"
               style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-default)' }}
             >
-              <div className="font-semibold text-slate-200 text-sm">{label}</div>
-              <div className="text-xs text-slate-500 mt-0.5">{desc}</div>
+              <span className="flex-shrink-0 drop-shadow-sm">
+                <Icon size={36} />
+              </span>
+              <div className="min-w-0">
+                <div className="font-semibold text-slate-200 text-sm leading-tight">{label}</div>
+                <div className="text-xs text-slate-500 mt-0.5 leading-tight">{desc}</div>
+              </div>
             </Link>
           ))}
         </div>
