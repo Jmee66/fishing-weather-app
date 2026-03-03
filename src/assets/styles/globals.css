@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+:root {
+  --color-primary: #0f4c81;
+  --color-primary-light: #1a6bbf;
+  --color-sea: #006994;
+  --color-sea-light: #0099cc;
+  --color-marine: #003d5b;
+  --color-freshwater: #2e7d32;
+  --color-warning: #f97316;
+  --color-danger: #ef4444;
+  --color-success: #22c55e;
+  --nav-height: 4rem;
+  --header-height: 3.5rem;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Leaflet fixes */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+/* MapLibre fixes */
+.maplibregl-canvas-container {
+  width: 100%;
+  height: 100%;
+}
+
+/* PWA standalone mode padding */
+@media (display-mode: standalone) {
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Scrollbar thin */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 2px;
+}
