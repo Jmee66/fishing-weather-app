@@ -16,6 +16,19 @@
     <meta property="og:description" content="Meteo marine, cartographie, marees et conditions de peche" />
     <meta property="og:type" content="website" />
     <title>FishWeather</title>
+    <script>
+      // Restaure l'URL encodée par 404.html (SPA redirect trick pour GitHub Pages)
+      (function() {
+        var p = window.location.search.slice(1).split('&')
+          .find(function(s) { return s.startsWith('p=') })
+        if (p) {
+          var decoded = decodeURIComponent(p.slice(2))
+          window.history.replaceState(null, null,
+            window.location.pathname.replace(/\/$/, '') + decoded || '/'
+          )
+        }
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>
