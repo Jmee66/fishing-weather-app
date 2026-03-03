@@ -1,10 +1,10 @@
 import type { ReactNode, ButtonHTMLAttributes } from 'react'
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger'
 const VARIANTS: Record<Variant, string> = {
-  primary: 'bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800',
-  secondary: 'bg-slate-100 text-slate-100 hover:bg-slate-200 active:bg-slate-300',
-  ghost: 'text-blue-600 hover:bg-sky-900/40 active:bg-blue-100',
-  danger: 'bg-red-600 text-white hover:bg-red-700',
+  primary: 'bg-sky-700/80 text-sky-100 hover:bg-sky-600/80 active:bg-sky-800/80 border border-sky-500/40',
+  secondary: 'bg-[var(--bg-surface)] text-slate-300 hover:bg-[var(--bg-elevated)] active:bg-[var(--bg-elevated)] border border-[var(--border-default)]',
+  ghost: 'text-sky-400 hover:bg-sky-900/40 active:bg-sky-900/60',
+  danger: 'bg-red-800/60 text-red-200 hover:bg-red-700/70 active:bg-red-800/80 border border-red-600/40',
 }
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant; size?: 'sm' | 'md' | 'lg'; children: ReactNode

@@ -7,7 +7,7 @@ export default function Tabs({ tabs, activeTab, onChange }: TabsProps) {
         <button
           key={tab.id}
           onClick={() => onChange(tab.id)}
-          className={`flex-1 flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg text-xs font-medium transition-all ${activeTab === tab.id ? 'bg-white text-sky-300 shadow-sm' : 'text-slate-600 hover:text-slate-800'}`}
+          className={`flex-1 flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg text-xs font-medium transition-all ${activeTab === tab.id ? 'bg-[var(--bg-surface)] text-sky-300 shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
         >
           {tab.icon && <span>{tab.icon}</span>}
           {tab.label}

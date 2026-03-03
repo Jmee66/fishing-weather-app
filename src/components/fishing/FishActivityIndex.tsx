@@ -2,13 +2,13 @@ import { useFishActivity } from '@/hooks/useFishActivity'
 import Card from '@/components/ui/Card'
 
 const COLORS: Record<string, string> = {
-  excellent: 'text-green-600', good: 'text-lime-600',
-  average: 'text-amber-600', poor: 'text-orange-600', bad: 'text-red-600',
+  excellent: 'text-green-400', good: 'text-lime-400',
+  average: 'text-amber-400', poor: 'text-orange-400', bad: 'text-red-400',
 }
 const BG_COLORS: Record<string, string> = {
-  excellent: 'bg-green-50 border-green-200', good: 'bg-lime-50 border-lime-200',
-  average: 'bg-amber-50 border-amber-200', poor: 'bg-orange-50 border-orange-200',
-  bad: 'bg-red-50 border-red-200',
+  excellent: 'bg-green-900/20 border-green-700/40', good: 'bg-lime-900/20 border-lime-700/40',
+  average: 'bg-amber-900/20 border-amber-700/40', poor: 'bg-orange-900/20 border-orange-700/40',
+  bad: 'bg-red-900/20 border-red-700/40',
 }
 
 export default function FishActivityIndex() {

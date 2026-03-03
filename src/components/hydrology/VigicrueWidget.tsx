@@ -3,10 +3,10 @@ import Card from '@/components/ui/Card'
 import Spinner from '@/components/ui/Spinner'
 import type { Coordinates } from '@/types'
 const VIGILANCE_COLORS: Record<number, { bg: string; text: string; label: string; emoji: string }> = {
-  1: { bg: "bg-green-900/30 border-green-200", text: "text-green-400", label: "Vert", emoji: "🟢" },
-  2: { bg: "bg-yellow-50 border-yellow-200", text: "text-yellow-700", label: "Jaune", emoji: "🟡" },
-  3: { bg: "bg-orange-900/30 border-orange-200", text: "text-orange-400", label: "Orange", emoji: "🟠" },
-  4: { bg: "bg-red-900/30 border-red-200", text: "text-red-400", label: "Rouge", emoji: "🔴" },
+  1: { bg: "bg-green-900/20 border-green-700/40", text: "text-green-400", label: "Vert", emoji: "🟢" },
+  2: { bg: "bg-yellow-900/20 border-yellow-700/40", text: "text-yellow-400", label: "Jaune", emoji: "🟡" },
+  3: { bg: "bg-orange-900/20 border-orange-700/40", text: "text-orange-400", label: "Orange", emoji: "🟠" },
+  4: { bg: "bg-red-900/20 border-red-700/40", text: "text-red-400", label: "Rouge", emoji: "🔴" },
 }
 const TREND_ICONS: Record<string, string> = { rising: "📈", stable: "➡️", falling: "📉" }
 const TREND_LABELS: Record<string, string> = { rising: "En hausse", stable: "Stable", falling: "En baisse" }

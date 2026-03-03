@@ -20,7 +20,7 @@ export default function ModelSelector() {
             <button
               key={src.id}
               onClick={() => setWeatherSource(src.id as WeatherSource)}
-              className={`p-2 rounded-xl border text-xs text-left transition-colors ${weatherSource === src.id ? 'border-blue-500 bg-sky-900/30 text-blue-700' : 'border-slate-200 text-slate-300 hover:border-slate-300'}`}
+              className={`p-2 rounded-xl border text-xs text-left transition-colors ${weatherSource === src.id ? 'border-sky-500/60 bg-sky-900/30 text-sky-300' : 'border-[var(--border-default)] text-slate-400 hover:border-slate-500 hover:text-slate-300'}`}
             >
               <div className="font-medium">{src.label}</div>
               <div className="text-[10px] opacity-70 mt-0.5">{src.description}</div>
@@ -35,7 +35,7 @@ export default function ModelSelector() {
             <button
               key={model.id}
               onClick={() => setWeatherModel(model.id as WeatherModel)}
-              className={`w-full flex items-center justify-between p-2.5 rounded-xl border text-sm transition-colors ${weatherModel === model.id ? 'border-blue-500 bg-sky-900/30 text-blue-700' : 'border-slate-200 text-slate-200 hover:border-slate-300'}`}
+              className={`w-full flex items-center justify-between p-2.5 rounded-xl border text-sm transition-colors ${weatherModel === model.id ? 'border-sky-500/60 bg-sky-900/30 text-sky-300' : 'border-[var(--border-default)] text-slate-400 hover:border-slate-500 hover:text-slate-300'}`}
             >
               <span className="font-medium">{model.name}</span>
               <span className="text-xs opacity-60">{model.description}</span>

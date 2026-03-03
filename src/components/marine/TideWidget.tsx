@@ -23,9 +23,9 @@ export default function TideWidget() {
       </div>
       <div className="grid grid-cols-2 gap-2">
         {upcomingEvents.map((event) => (
-          <div key={event.dt} className={`rounded-xl p-3 ${event.type === 'PM' ? 'bg-blue-50 border border-blue-100' : 'bg-slate-50 border border-slate-100'}`}>
+          <div key={event.dt} className={`rounded-xl p-3 ${event.type === 'PM' ? 'bg-sky-900/30 border border-sky-700/40' : 'bg-[var(--bg-base)] border border-[var(--border-subtle)]'}`}>
             <div className="flex items-center justify-between mb-1">
-              <span className={`text-xs font-bold ${event.type === 'PM' ? 'text-blue-700' : 'text-slate-600'}`}>
+              <span className={`text-xs font-bold ${event.type === 'PM' ? 'text-sky-300' : 'text-slate-400'}`}>
                 {event.type === 'PM' ? '▲ Pleine mer' : '▼ Basse mer'}
               </span>
               {event.coefficient && (
