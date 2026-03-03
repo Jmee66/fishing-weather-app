@@ -1,8 +1,11 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useLocationStore } from '@/stores/location.store'
 import { useGeolocation } from '@/hooks/useGeolocation'
+import { useFishingData } from '@/hooks/useFishingData'
+import SpotForm from '@/components/fishing/SpotForm'
+import type { FishingSpot } from '@/types'
 
 // Fix Leaflet default icons
 delete (L.Icon.Default.prototype as any)._getIconUrl
@@ -12,9 +15,36 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 })
 
+function createSpotIcon() {
+  return L.divIcon({
+    html: '<div style="font-size:22px;line-height:1;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.6))">🎣</div>',
+    className: '',
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+    popupAnchor: [0, -16],
+  })
+}
+
+function createPositionIcon() {
+  return L.divIcon({
+    html: '<div style="font-size:22px;line-height:1;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.6))">📍</div>',
+    className: '',
+    iconSize: [24, 24],
+    iconAnchor: [12, 24],
+    popupAnchor: [0, -24],
+  })
+}
+
 export default function MapPage() {
   const mapRef = useRef<HTMLDivElement>(null)
   const leafletMap = useRef<L.Map | null>(null)
+  const spotsLayerRef = useRef<L.LayerGroup | null>(null)
+  const positionMarkerRef = useRef<L.Marker | null>(null)
+  const longpressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const [showSpotForm, setShowSpotForm] = useState(false)
+  const [longpressCoords, setLongpressCoords] = useState<{ lat: number; lon: number } | undefined>()
+
   const selectedLat = useLocationStore((s) => s.selectedLocation?.lat)
   const selectedLon = useLocationStore((s) => s.selectedLocation?.lon)
   const currentLat  = useLocationStore((s) => s.currentPosition?.lat)
@@ -23,7 +53,9 @@ export default function MapPage() {
   const lon = selectedLon ?? currentLon
   const coords = lat != null && lon != null ? { lat, lon } : null
   const { locate, isLocating } = useGeolocation()
+  const { spots, saveSpot } = useFishingData()
 
+  // Init map once
   useEffect(() => {
     if (!mapRef.current || leafletMap.current) return
 
@@ -37,7 +69,7 @@ export default function MapPage() {
       zoomControl: true,
     })
 
-    // OSM base layer
+    // Base layers
     const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors',
       maxZoom: 19,
@@ -56,43 +88,154 @@ export default function MapPage() {
       { attribution: '© SHOM', maxZoom: 18, opacity: 0.7 }
     )
 
+    // Spots layer
+    const spotsLayer = L.layerGroup()
+    spotsLayerRef.current = spotsLayer
+
     osm.addTo(map)
+    spotsLayer.addTo(map)
 
     L.control.layers(
       { 'OpenStreetMap': osm, 'SHOM Marine': shom },
-      { 'OpenSeaMap': seamap }
+      { 'OpenSeaMap': seamap, 'Spots 🎣': spotsLayer }
     ).addTo(map)
+
+    // Longpress detection
+    const startLongpress = (latlng: L.LatLng) => {
+      if (longpressTimer.current) clearTimeout(longpressTimer.current)
+      longpressTimer.current = setTimeout(() => {
+        setLongpressCoords({ lat: latlng.lat, lon: latlng.lng })
+        setShowSpotForm(true)
+      }, 500)
+    }
+    const cancelLongpress = () => {
+      if (longpressTimer.current) {
+        clearTimeout(longpressTimer.current)
+        longpressTimer.current = null
+      }
+    }
+
+    map.on('mousedown', (e) => startLongpress(e.latlng))
+    map.on('mouseup mousemove', cancelLongpress)
+    map.on('touchstart', (e) => {
+      const te = e as unknown as { originalEvent: TouchEvent; latlng: L.LatLng }
+      if (te.originalEvent && te.originalEvent.touches.length === 1 && te.latlng) {
+        startLongpress(te.latlng)
+      }
+    })
+    map.on('touchend touchmove', cancelLongpress)
 
     leafletMap.current = map
 
     return () => {
+      cancelLongpress()
       map.remove()
       leafletMap.current = null
+      spotsLayerRef.current = null
+      positionMarkerRef.current = null
     }
   }, [])
 
-  // Pan to position when coords change
+  // Update position marker when coords change
   useEffect(() => {
-    if (coords && leafletMap.current) {
-      leafletMap.current.setView([coords.lat, coords.lon], 12)
-      L.marker([coords.lat, coords.lon])
+    if (!leafletMap.current) return
+    if (!coords) return
+
+    if (positionMarkerRef.current) {
+      positionMarkerRef.current.setLatLng([coords.lat, coords.lon])
+    } else {
+      positionMarkerRef.current = L.marker([coords.lat, coords.lon], {
+        icon: createPositionIcon(),
+        zIndexOffset: 1000,
+      })
         .addTo(leafletMap.current)
         .bindPopup('📍 Votre position')
-        .openPopup()
+      leafletMap.current.setView([coords.lat, coords.lon], 12)
     }
-  }, [coords])
+  }, [coords?.lat, coords?.lon])
+
+  // Sync spots markers
+  useEffect(() => {
+    const layer = spotsLayerRef.current
+    if (!layer) return
+
+    layer.clearLayers()
+
+    spots.forEach((spot) => {
+      const marker = L.marker([spot.coordinates.lat, spot.coordinates.lon], {
+        icon: createSpotIcon(),
+      })
+
+      const CATEGORY_LABELS: Record<string, string> = {
+        coastal: '🌊 Mer côtière',
+        boat: '⛵ Bateau',
+        freshwater_lake: '🏞️ Lac',
+        freshwater_river: '🌊 Rivière',
+        reservoir: '💧 Réservoir',
+      }
+
+      const speciesHtml = spot.species.length > 0
+        ? `<div style="margin-top:4px;font-size:11px;color:#94a3b8">${spot.species.join(', ')}</div>`
+        : ''
+      const ratingHtml = spot.rating
+        ? `<div style="font-size:11px;margin-top:2px">${'⭐'.repeat(spot.rating)}</div>`
+        : ''
+
+      marker.bindPopup(`
+        <div style="min-width:140px">
+          <div style="font-weight:600;font-size:13px;margin-bottom:2px">${spot.name}</div>
+          <div style="font-size:11px;color:#94a3b8">${CATEGORY_LABELS[spot.category] ?? spot.category}</div>
+          ${ratingHtml}
+          ${speciesHtml}
+          ${spot.description ? `<div style="font-size:11px;margin-top:4px;color:#94a3b8">${spot.description}</div>` : ''}
+          <div style="font-size:10px;margin-top:4px;color:#64748b;font-family:monospace">${spot.coordinates.lat.toFixed(4)}°N, ${spot.coordinates.lon.toFixed(4)}°E</div>
+        </div>
+      `)
+
+      marker.addTo(layer)
+    })
+  }, [spots])
+
+  const handleSaveSpot = async (spot: FishingSpot) => {
+    await saveSpot(spot)
+    setShowSpotForm(false)
+    setLongpressCoords(undefined)
+  }
 
   return (
     <div className="relative h-full">
       <div ref={mapRef} className="absolute inset-0" />
+
+      {/* Longpress hint */}
+      <div
+        className="absolute top-3 left-1/2 -translate-x-1/2 z-[1000] px-3 py-1.5 rounded-full text-xs pointer-events-none select-none"
+        style={{ backgroundColor: 'rgba(0,0,0,0.55)', color: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(4px)' }}
+      >
+        Appui long pour ajouter un spot 🎣
+      </div>
+
+      {/* Locate button */}
       <button
         onClick={locate}
         disabled={isLocating}
-        className="absolute bottom-6 right-4 z-[1000] bg-[var(--bg-surface)] rounded-full p-3 shadow-lg border border-[var(--border-default)] hover:bg-[var(--bg-elevated)] active:scale-95 transition-transform"
+        className="absolute bottom-6 right-4 z-[1000] rounded-full p-3 shadow-lg border transition-colors"
+        style={{
+          backgroundColor: 'var(--bg-surface)',
+          borderColor: 'var(--border-default)',
+        }}
         title="Me localiser"
       >
         {isLocating ? '⌛' : '📍'}
       </button>
+
+      {/* SpotForm modal */}
+      {showSpotForm && (
+        <SpotForm
+          initialCoords={longpressCoords ?? coords ?? undefined}
+          onSave={handleSaveSpot}
+          onClose={() => { setShowSpotForm(false); setLongpressCoords(undefined) }}
+        />
+      )}
     </div>
   )
 }

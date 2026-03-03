@@ -2,6 +2,7 @@ import Spinner from '@/components/ui/Spinner'
 import Alert from '@/components/ui/Alert'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
+import TideChart from '@/components/marine/TideChart'
 import { useTides } from '@/hooks/useTides'
 import { useLocationStore } from '@/stores/location.store'
 import { format } from 'date-fns'
@@ -46,6 +47,13 @@ export default function TidesPage() {
               {tides.distance.toFixed(0)} km de votre position
             </p>
           </Card>
+
+          {(tides.predictions.length > 0 || tides.events.length >= 2) && (
+            <Card>
+              <p className="text-xs text-slate-500 mb-2">Courbe de marée</p>
+              <TideChart tides={tides} />
+            </Card>
+          )}
 
           <Card padding="none">
             <div className="px-4 py-3 border-b border-[var(--border-subtle)]">

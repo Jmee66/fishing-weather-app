@@ -1,9 +1,9 @@
 import { useSettingsStore } from '@/stores/settings.store'
 import Card from '@/components/ui/Card'
-import type { ApiKeys, UnitSystem } from '@/types'
+import type { ApiKeys, UnitSystem, WeatherSource, WeatherModel } from '@/types'
 
 export default function SettingsPage() {
-  const { apiKeys, units, setApiKey, setUnits } = useSettingsStore()
+  const { apiKeys, units, weatherSource, weatherModel, setApiKey, setUnits, setWeatherSource, setWeatherModel } = useSettingsStore()
 
   const API_FIELDS: Array<{
     key: keyof ApiKeys
@@ -30,6 +30,30 @@ export default function SettingsPage() {
     },
   ]
 
+  const SOURCE_OPTIONS: Array<{ value: WeatherSource; label: string; desc: string; needsKey?: keyof ApiKeys }> = [
+    { value: 'openmeteo', label: 'Open-Meteo', desc: 'Gratuit · ECMWF · Global' },
+    { value: 'meteofrance', label: 'Météo-France', desc: 'Officiel · France uniquement', needsKey: 'meteofrance' },
+    { value: 'owm', label: 'OpenWeatherMap', desc: 'Global · Clé API requise', needsKey: 'owm' },
+  ]
+
+  const MODEL_OPTIONS: Record<WeatherSource, Array<{ value: WeatherModel; label: string }>> = {
+    openmeteo: [
+      { value: 'auto', label: 'Auto (recommandé)' },
+      { value: 'ecmwf', label: 'ECMWF IFS' },
+      { value: 'gfs', label: 'GFS (NOAA)' },
+      { value: 'icon', label: 'ICON (DWD)' },
+      { value: 'arome', label: 'AROME (MF)' },
+    ],
+    meteofrance: [
+      { value: 'arome', label: 'AROME (2.5 km)' },
+      { value: 'arome_hd', label: 'AROME HD (1.3 km)' },
+      { value: 'arpege', label: 'ARPEGE (Global)' },
+    ],
+    owm: [
+      { value: 'auto', label: 'Standard (par défaut)' },
+    ],
+  }
+
   const UNIT_OPTIONS: Array<{ value: UnitSystem; label: string; desc: string }> = [
     { value: 'metric', label: 'Métrique', desc: 'km/h, °C, km' },
     { value: 'nautical', label: 'Nautique', desc: 'nœuds, °C, nm' },
@@ -38,6 +62,71 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-4 p-4">
+      {/* Weather Source */}
+      <Card>
+        <h2 className="font-semibold text-slate-100 mb-3">Source météo</h2>
+        <div className="space-y-2 mb-4">
+          {SOURCE_OPTIONS.map((opt) => {
+            const isActive = weatherSource === opt.value
+            const missingKey = opt.needsKey && !apiKeys[opt.needsKey]
+            return (
+              <button
+                key={opt.value}
+                onClick={() => {
+                  setWeatherSource(opt.value)
+                  // Reset model to first available
+                  const models = MODEL_OPTIONS[opt.value]
+                  if (models.length > 0) setWeatherModel(models[0].value)
+                }}
+                className="w-full text-left p-3 rounded-xl border transition-colors"
+                style={{
+                  backgroundColor: isActive ? 'rgb(14 165 233 / 0.12)' : 'var(--bg-surface)',
+                  borderColor: isActive ? 'rgb(56 189 248 / 0.5)' : 'var(--border-default)',
+                }}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className={`text-sm font-medium ${isActive ? 'text-sky-300' : 'text-slate-300'}`}>
+                      {opt.label}
+                    </div>
+                    <div className="text-xs text-slate-500 mt-0.5">{opt.desc}</div>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                    {missingKey && (
+                      <span className="text-xs text-amber-500">⚠️ Clé manquante</span>
+                    )}
+                    {isActive && (
+                      <div className="w-2 h-2 rounded-full bg-sky-400" />
+                    )}
+                  </div>
+                </div>
+              </button>
+            )
+          })}
+        </div>
+
+        <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">Modèle de prévision</h3>
+        <div className="grid grid-cols-2 gap-2">
+          {MODEL_OPTIONS[weatherSource].map((opt) => {
+            const isActive = weatherModel === opt.value
+            return (
+              <button
+                key={opt.value}
+                onClick={() => setWeatherModel(opt.value)}
+                className="p-2 rounded-xl border text-left text-xs transition-colors"
+                style={{
+                  backgroundColor: isActive ? 'rgb(14 165 233 / 0.15)' : 'var(--bg-surface)',
+                  borderColor: isActive ? 'rgb(56 189 248 / 0.5)' : 'var(--border-default)',
+                  color: isActive ? 'rgb(125 211 252)' : 'var(--text-secondary)',
+                }}
+              >
+                <span className={isActive ? 'font-semibold' : ''}>{opt.label}</span>
+              </button>
+            )
+          })}
+        </div>
+      </Card>
+
       {/* Units */}
       <Card>
         <h2 className="font-semibold text-slate-100 mb-3">Unités</h2>
@@ -48,8 +137,8 @@ export default function SettingsPage() {
               onClick={() => setUnits(opt.value)}
               className={`p-2.5 rounded-xl border text-left text-xs transition-colors ${
                 units === opt.value
-                  ? 'border-blue-500 bg-sky-900/30 text-blue-700'
-                  : 'border-slate-200 text-slate-300 hover:bg-slate-50'
+                  ? 'border-sky-500/60 bg-sky-900/30 text-sky-300'
+                  : 'border-[var(--border-default)] text-slate-400 hover:bg-[var(--bg-elevated)] hover:text-slate-300'
               }`}
             >
               <div className="font-medium">{opt.label}</div>

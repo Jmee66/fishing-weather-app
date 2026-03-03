@@ -6,6 +6,10 @@ import type { FavouriteLocation } from '@/stores/location.store'
 import { geocodingService } from '@/services/api/geocoding.service'
 import type { GeocodingResult } from '@/types'
 import { IconGPS, IconStar, IconMap, IconSun, IconWave, IconFish, IconMoon, IconRiver } from '@/components/ui/icons/WeatherIcons'
+import CurrentWeather from '@/components/weather/CurrentWeather'
+import TideWidget from '@/components/marine/TideWidget'
+import FishActivityIndex from '@/components/fishing/FishActivityIndex'
+import SunMoonWidget from '@/components/ephemeris/SunMoonWidget'
 
 // ── Icônes SVG simples (non disponibles dans WeatherIcons) ───────────────────
 const IconSearch = () => (
@@ -288,6 +292,29 @@ export default function HomePage() {
             <p className="text-sm font-semibold text-slate-200">Aucune position</p>
             <p className="text-xs text-slate-500 mt-0.5">Recherchez un lieu ou activez le GPS</p>
           </div>
+        </div>
+      )}
+
+      {/* ── Dashboard widgets ── */}
+      {activeCoords && (
+        <div className="space-y-3">
+          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-widest px-0.5">
+            Résumé
+          </h2>
+          <Link to="/weather" className="block hover:opacity-90 transition-opacity">
+            <CurrentWeather />
+          </Link>
+          <div className="grid grid-cols-2 gap-3">
+            <Link to="/tides" className="block hover:opacity-90 transition-opacity">
+              <TideWidget />
+            </Link>
+            <Link to="/fishing" className="block hover:opacity-90 transition-opacity">
+              <FishActivityIndex />
+            </Link>
+          </div>
+          <Link to="/ephemeris" className="block hover:opacity-90 transition-opacity">
+            <SunMoonWidget />
+          </Link>
         </div>
       )}
 
