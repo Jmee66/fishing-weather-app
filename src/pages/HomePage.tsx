@@ -41,7 +41,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 // ── Composant principal ──────────────────────────────────────────────────────
 export default function HomePage() {
-  const { locate, isLocating, locationError } = useGeolocation()
+  const { locate, isLocating, locationError, locationErrorCode } = useGeolocation()
   const {
     selectedLocation, currentPosition, favourites,
     setSelectedLocation, addFavourite, removeFavourite, isFavourite,
@@ -168,8 +168,39 @@ export default function HomePage() {
 
         {/* Erreur géoloc */}
         {locationError && (
-          <div className="mt-2 text-xs text-red-400 px-1 flex items-center gap-1">
-            <span>⚠</span> {locationError}
+          <div
+            className="mt-2 rounded-xl border p-3 space-y-2"
+            style={{ backgroundColor: 'rgb(127 29 29 / 0.2)', borderColor: 'rgb(185 28 28 / 0.4)' }}
+          >
+            <div className="flex items-start gap-2">
+              <span className="text-red-400 flex-shrink-0 text-base leading-tight">⚠</span>
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-red-300">{locationError}</p>
+                {locationErrorCode === 1 && (
+                  <p className="text-xs text-red-400/70 mt-1">
+                    Sur iPhone : Réglages → Confidentialité → Service de localisation → Safari/Chrome → "Lors de l'utilisation"
+                  </p>
+                )}
+                {locationErrorCode === 2 && (
+                  <p className="text-xs text-red-400/70 mt-1">
+                    Astuce : allez à l'extérieur ou activez le Wi-Fi pour aider le GPS.
+                  </p>
+                )}
+              </div>
+            </div>
+            {locationErrorCode !== 1 && (
+              <button
+                onClick={locate}
+                disabled={isLocating}
+                className="w-full py-1.5 rounded-lg text-xs font-semibold transition-colors"
+                style={{ backgroundColor: 'rgb(185 28 28 / 0.3)', color: '#fca5a5' }}
+              >
+                {isLocating ? 'Localisation…' : '↺ Réessayer la géolocalisation'}
+              </button>
+            )}
+            <p className="text-xs text-red-400/60 text-center">
+              Ou recherchez un lieu manuellement ci-dessus ↑
+            </p>
           </div>
         )}
       </div>

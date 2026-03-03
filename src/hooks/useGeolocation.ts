@@ -1,16 +1,29 @@
 import { useCallback } from 'react'
 import { useLocationStore } from '@/stores/location.store'
 
+/** Code 1 = permission refusée (définitif), 2 = indisponible (réessayable), 3 = timeout (réessayable) */
+export type GeoErrorCode = 1 | 2 | 3 | null
+
+const GEO_MESSAGES: Record<number, string> = {
+  1: 'Permission refusée — autorisez la localisation dans les réglages du navigateur/système',
+  2: 'Position indisponible — GPS ou réseau non prêt, réessayez dans quelques secondes',
+  3: 'Délai dépassé — réessayez',
+}
+
 export function useGeolocation() {
-  const { currentPosition, isLocating, locationError, setCurrentPosition, setIsLocating, setLocationError } = useLocationStore()
+  const {
+    currentPosition, isLocating, locationError,
+    locationErrorCode,
+    setCurrentPosition, setIsLocating, setLocationError,
+  } = useLocationStore()
 
   const locate = useCallback(() => {
     if (!navigator.geolocation) {
-      setLocationError('Géolocalisation non supportée par ce navigateur')
+      setLocationError('Géolocalisation non supportée par ce navigateur', null)
       return
     }
     setIsLocating(true)
-    setLocationError(null)
+    setLocationError(null, null)
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setCurrentPosition({
@@ -22,14 +35,10 @@ export function useGeolocation() {
         setIsLocating(false)
       },
       (err) => {
-        const messages: Record<number, string> = {
-          1: 'Permission de géolocalisation refusée — autorisez-la dans les réglages du navigateur',
-          2: 'Position indisponible — vérifiez votre GPS',
-          3: 'Délai dépassé — réessayez',
-        }
-        setLocationError(messages[err.code] ?? err.message)
+        setLocationError(GEO_MESSAGES[err.code] ?? err.message, err.code as GeoErrorCode)
       },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
+      // timeout 20s sur mobile, maximumAge 0 pour forcer une nouvelle lecture
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
     )
   }, [setCurrentPosition, setIsLocating, setLocationError])
 
@@ -47,17 +56,12 @@ export function useGeolocation() {
         setIsLocating(false)
       },
       (err) => {
-        const messages: Record<number, string> = {
-          1: 'Permission refusée',
-          2: 'Position indisponible',
-          3: 'Délai dépassé',
-        }
-        setLocationError(messages[err.code] ?? err.message)
+        setLocationError(GEO_MESSAGES[err.code] ?? err.message, err.code as GeoErrorCode)
       },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 5000 }
     )
     return () => navigator.geolocation.clearWatch(id)
   }, [setCurrentPosition, setIsLocating, setLocationError])
 
-  return { currentPosition, isLocating, locationError, locate, watchPosition }
+  return { currentPosition, isLocating, locationError, locationErrorCode, locate, watchPosition }
 }

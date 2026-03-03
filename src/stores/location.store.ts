@@ -17,10 +17,11 @@ interface LocationState {
   favourites: FavouriteLocation[]
   isLocating: boolean
   locationError: string | null
+  locationErrorCode: number | null  // 1=refusé, 2=indisponible, 3=timeout
   setCurrentPosition: (pos: Coordinates & { accuracy?: number; timestamp?: number }) => void
   setSelectedLocation: (loc: (Coordinates & { name: string }) | null) => void
   setIsLocating: (v: boolean) => void
-  setLocationError: (err: string | null) => void
+  setLocationError: (err: string | null, code?: number | null) => void
   getActiveLocation: () => Coordinates | null
   addFavourite: (loc: Omit<FavouriteLocation, 'id' | 'createdAt'>) => void
   removeFavourite: (id: string) => void
@@ -35,11 +36,12 @@ export const useLocationStore = create<LocationState>()(
       favourites: [],
       isLocating: false,
       locationError: null,
+      locationErrorCode: null,
 
-      setCurrentPosition: (pos) => set({ currentPosition: pos, locationError: null, isLocating: false }),
+      setCurrentPosition: (pos) => set({ currentPosition: pos, locationError: null, locationErrorCode: null, isLocating: false }),
       setSelectedLocation: (loc) => set({ selectedLocation: loc }),
       setIsLocating: (v) => set({ isLocating: v }),
-      setLocationError: (err) => set({ locationError: err, isLocating: false }),
+      setLocationError: (err, code = null) => set({ locationError: err, locationErrorCode: code, isLocating: false }),
 
       getActiveLocation: () => {
         const { selectedLocation, currentPosition } = get()
