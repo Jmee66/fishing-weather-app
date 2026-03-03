@@ -37,8 +37,8 @@ export function useGeolocation() {
       (err) => {
         setLocationError(GEO_MESSAGES[err.code] ?? err.message, err.code as GeoErrorCode)
       },
-      // timeout 20s sur mobile, maximumAge 0 pour forcer une nouvelle lecture
-      { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
+      // timeout 20s sur mobile, maximumAge 30s pour réutiliser une position récente
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 30000 }
     )
   }, [setCurrentPosition, setIsLocating, setLocationError])
 
