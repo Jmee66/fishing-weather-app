@@ -30,12 +30,12 @@ const IconPin = () => (
 
 // ── Liens rapides ────────────────────────────────────────────────────────────
 const QUICK_LINKS = [
-  { to: '/weather',   label: 'Météo',       desc: 'Prévisions 7 jours', Icon: IconSun },
-  { to: '/marine',    label: 'Marine',      desc: 'Vagues & marées',    Icon: IconWave },
-  { to: '/map',       label: 'Carte',       desc: 'Spots & navigation', Icon: IconMap },
-  { to: '/fishing',   label: 'Pêche',       desc: 'Carnet & conditions',Icon: IconFish },
-  { to: '/ephemeris', label: 'Éphéméride',  desc: 'Soleil & lune',      Icon: IconMoon },
-  { to: '/hydrology', label: 'Vigicrues',   desc: 'Débits rivières',    Icon: IconRiver },
+  { to: '/weather',   label: 'Météo',       desc: 'Prévisions 7 jours', Icon: IconSun,   accent: false },
+  { to: '/marine',    label: 'Marine',      desc: 'Vagues & marées',    Icon: IconWave,  accent: false },
+  { to: '/hydrology', label: 'Vigicrues',   desc: 'Rivières & débits',  Icon: IconRiver, accent: true  },
+  { to: '/fishing',   label: 'Pêche',       desc: 'Carnet & conditions',Icon: IconFish,  accent: false },
+  { to: '/map',       label: 'Carte',       desc: 'Spots & navigation', Icon: IconMap,   accent: false },
+  { to: '/ephemeris', label: 'Éphéméride',  desc: 'Soleil & lune',      Icon: IconMoon,  accent: false },
 ]
 
 // ── Catégorie ────────────────────────────────────────────────────────────────
@@ -372,16 +372,22 @@ export default function HomePage() {
           Navigation
         </h2>
         <div className="grid grid-cols-2 gap-2">
-          {QUICK_LINKS.map(({ to, label, desc, Icon }) => (
+          {QUICK_LINKS.map(({ to, label, desc, Icon, accent }) => (
             <Link key={to} to={to}
-              className="rounded-xl border p-3 flex items-center gap-3 transition-all active:scale-[0.97] hover:border-[var(--border-muted)]"
-              style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-default)' }}
+              className="rounded-xl border p-3 flex items-center gap-3 transition-all active:scale-[0.97]"
+              style={accent ? {
+                backgroundColor: 'rgb(6 78 59 / 0.25)',
+                borderColor: 'rgb(52 211 153 / 0.35)',
+              } : {
+                backgroundColor: 'var(--bg-surface)',
+                borderColor: 'var(--border-default)',
+              }}
             >
               <span className="flex-shrink-0 drop-shadow-sm">
                 <Icon size={36} />
               </span>
               <div className="min-w-0">
-                <div className="font-semibold text-slate-200 text-sm leading-tight">{label}</div>
+                <div className={`font-semibold text-sm leading-tight ${accent ? 'text-emerald-300' : 'text-slate-200'}`}>{label}</div>
                 <div className="text-xs text-slate-500 mt-0.5 leading-tight">{desc}</div>
               </div>
             </Link>
