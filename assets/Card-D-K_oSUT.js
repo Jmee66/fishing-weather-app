@@ -1,0 +1,1 @@
+import{j as a}from"./vendor-query-kPgIHyrB.js";function m({children:o,className:t="",onClick:r,padding:s="md"}){const e=s==="none"?"":s==="sm"?"p-3":"p-4";return a.jsx("div",{className:`bg-white rounded-2xl shadow-sm border border-slate-100 ${e} ${r?"cursor-pointer active:scale-[0.98] transition-transform":""} ${t}`,onClick:r,children:o})}export{m as C};

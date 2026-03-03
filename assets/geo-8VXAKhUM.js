@@ -1,0 +1,1 @@
+function r(t,a){const s=(a.lat-t.lat)*Math.PI/180,o=(a.lon-t.lon)*Math.PI/180,c=t.lat*Math.PI/180,h=a.lat*Math.PI/180,n=Math.sin(s/2)**2+Math.cos(c)*Math.cos(h)*Math.sin(o/2)**2;return 6371*(2*Math.atan2(Math.sqrt(n),Math.sqrt(1-n)))}export{r as h};
