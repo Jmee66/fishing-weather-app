@@ -3,8 +3,10 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { useLocationStore } from '@/stores/location.store'
 import { useGeolocation } from '@/hooks/useGeolocation'
-import { useFishingData } from '@/hooks/useFishingData'
+import { useFishingStore } from '@/stores/fishing.store'
 import SpotForm from '@/components/fishing/SpotForm'
+import { spotsStorage } from '@/services/storage/spots.storage'
+import { logStorage } from '@/services/storage/log.storage'
 import type { FishingSpot } from '@/types'
 
 // Fix Leaflet default icons
@@ -14,6 +16,14 @@ L.Icon.Default.mergeOptions({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 })
+
+const CATEGORY_LABELS: Record<string, string> = {
+  coastal: '🌊 Mer côtière',
+  boat: '⛵ Bateau',
+  freshwater_lake: '🏞️ Lac',
+  freshwater_river: '🌊 Rivière',
+  reservoir: '💧 Réservoir',
+}
 
 function createSpotIcon() {
   return L.divIcon({
@@ -35,12 +45,36 @@ function createPositionIcon() {
   })
 }
 
+function renderSpotsOnLayer(layer: L.LayerGroup, spots: FishingSpot[]) {
+  layer.clearLayers()
+  spots.forEach((spot) => {
+    const speciesHtml = spot.species.length > 0
+      ? `<div style="margin-top:4px;font-size:11px;color:#94a3b8">${spot.species.join(', ')}</div>`
+      : ''
+    const ratingHtml = spot.rating
+      ? `<div style="font-size:11px;margin-top:2px">${'⭐'.repeat(spot.rating)}</div>`
+      : ''
+    L.marker([spot.coordinates.lat, spot.coordinates.lon], { icon: createSpotIcon() })
+      .bindPopup(`
+        <div style="min-width:140px">
+          <div style="font-weight:600;font-size:13px;margin-bottom:2px">${spot.name}</div>
+          <div style="font-size:11px;color:#94a3b8">${CATEGORY_LABELS[spot.category] ?? spot.category}</div>
+          ${ratingHtml}${speciesHtml}
+          ${spot.description ? `<div style="font-size:11px;margin-top:4px;color:#94a3b8">${spot.description}</div>` : ''}
+          <div style="font-size:10px;margin-top:4px;color:#64748b;font-family:monospace">${spot.coordinates.lat.toFixed(4)}°N, ${spot.coordinates.lon.toFixed(4)}°E</div>
+        </div>
+      `)
+      .addTo(layer)
+  })
+}
+
 export default function MapPage() {
   const mapRef = useRef<HTMLDivElement>(null)
   const leafletMap = useRef<L.Map | null>(null)
   const spotsLayerRef = useRef<L.LayerGroup | null>(null)
   const positionMarkerRef = useRef<L.Marker | null>(null)
   const longpressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const lastSpotsKey = useRef<string>('')
 
   const [showSpotForm, setShowSpotForm] = useState(false)
   const [longpressCoords, setLongpressCoords] = useState<{ lat: number; lon: number } | undefined>()
@@ -53,7 +87,21 @@ export default function MapPage() {
   const lon = selectedLon ?? currentLon
   const coords = lat != null && lon != null ? { lat, lon } : null
   const { locate, isLocating } = useGeolocation()
-  const { spots, saveSpot } = useFishingData()
+
+  // Stable selectors — Zustand returns same reference if value unchanged
+  const spots   = useFishingStore((s) => s.spots)
+  const isLoaded = useFishingStore((s) => s.isLoaded)
+
+  // Load spots from IndexedDB if not already loaded
+  useEffect(() => {
+    if (isLoaded) return
+    const { setSpots, setLog, setIsLoaded } = useFishingStore.getState()
+    Promise.all([spotsStorage.getAll(), logStorage.getAll()]).then(([s, l]) => {
+      setSpots(s)
+      setLog(l)
+      setIsLoaded(true)
+    })
+  }, [isLoaded])
 
   // Init map once
   useEffect(() => {
@@ -69,26 +117,20 @@ export default function MapPage() {
       zoomControl: true,
     })
 
-    // Base layers
     const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors',
       maxZoom: 19,
     })
-
-    // OpenSeaMap overlay
     const seamap = L.tileLayer('https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png', {
       attribution: '© OpenSeaMap contributors',
       maxZoom: 18,
       opacity: 0.8,
     })
-
-    // SHOM marine charts
     const shom = L.tileLayer(
       'https://services.data.shom.fr/INSPIRE/wmts/CARTES_MARINES_VECTEUR/TMS/GoogleMapsCompatible/{z}/{x}/{y}.png',
       { attribution: '© SHOM', maxZoom: 18, opacity: 0.7 }
     )
 
-    // Spots layer
     const spotsLayer = L.layerGroup()
     spotsLayerRef.current = spotsLayer
 
@@ -100,7 +142,7 @@ export default function MapPage() {
       { 'OpenSeaMap': seamap, 'Spots 🎣': spotsLayer }
     ).addTo(map)
 
-    // Longpress detection
+    // Longpress detection — setters are stable (useState), safe to use in closure
     const startLongpress = (latlng: L.LatLng) => {
       if (longpressTimer.current) clearTimeout(longpressTimer.current)
       longpressTimer.current = setTimeout(() => {
@@ -134,13 +176,11 @@ export default function MapPage() {
       spotsLayerRef.current = null
       positionMarkerRef.current = null
     }
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Update position marker when coords change
   useEffect(() => {
-    if (!leafletMap.current) return
-    if (!coords) return
-
+    if (!leafletMap.current || !coords) return
     if (positionMarkerRef.current) {
       positionMarkerRef.current.setLatLng([coords.lat, coords.lon])
     } else {
@@ -152,52 +192,23 @@ export default function MapPage() {
         .bindPopup('📍 Votre position')
       leafletMap.current.setView([coords.lat, coords.lon], 12)
     }
-  }, [coords?.lat, coords?.lon])
+  }, [coords?.lat, coords?.lon]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Sync spots markers
+  // Sync spots markers — guarded by key to avoid unnecessary redraws
   useEffect(() => {
     const layer = spotsLayerRef.current
     if (!layer) return
-
-    layer.clearLayers()
-
-    spots.forEach((spot) => {
-      const marker = L.marker([spot.coordinates.lat, spot.coordinates.lon], {
-        icon: createSpotIcon(),
-      })
-
-      const CATEGORY_LABELS: Record<string, string> = {
-        coastal: '🌊 Mer côtière',
-        boat: '⛵ Bateau',
-        freshwater_lake: '🏞️ Lac',
-        freshwater_river: '🌊 Rivière',
-        reservoir: '💧 Réservoir',
-      }
-
-      const speciesHtml = spot.species.length > 0
-        ? `<div style="margin-top:4px;font-size:11px;color:#94a3b8">${spot.species.join(', ')}</div>`
-        : ''
-      const ratingHtml = spot.rating
-        ? `<div style="font-size:11px;margin-top:2px">${'⭐'.repeat(spot.rating)}</div>`
-        : ''
-
-      marker.bindPopup(`
-        <div style="min-width:140px">
-          <div style="font-weight:600;font-size:13px;margin-bottom:2px">${spot.name}</div>
-          <div style="font-size:11px;color:#94a3b8">${CATEGORY_LABELS[spot.category] ?? spot.category}</div>
-          ${ratingHtml}
-          ${speciesHtml}
-          ${spot.description ? `<div style="font-size:11px;margin-top:4px;color:#94a3b8">${spot.description}</div>` : ''}
-          <div style="font-size:10px;margin-top:4px;color:#64748b;font-family:monospace">${spot.coordinates.lat.toFixed(4)}°N, ${spot.coordinates.lon.toFixed(4)}°E</div>
-        </div>
-      `)
-
-      marker.addTo(layer)
-    })
+    const key = spots.map((s) => `${s.id}:${s.updatedAt}`).join('|')
+    if (key === lastSpotsKey.current) return
+    lastSpotsKey.current = key
+    renderSpotsOnLayer(layer, spots)
   }, [spots])
 
   const handleSaveSpot = async (spot: FishingSpot) => {
-    await saveSpot(spot)
+    await spotsStorage.save(spot)
+    const { spots: current, addSpot, updateSpot } = useFishingStore.getState()
+    if (current.find((s) => s.id === spot.id)) updateSpot(spot)
+    else addSpot(spot)
     setShowSpotForm(false)
     setLongpressCoords(undefined)
   }
