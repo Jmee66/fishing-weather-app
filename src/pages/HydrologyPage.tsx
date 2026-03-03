@@ -31,7 +31,7 @@ function StationCard({ item }: { item: HydrologyData }) {
     <Card>
       <div className="flex items-start justify-between mb-3">
         <div>
-          <p className="font-semibold text-slate-800">{station.libelle_site}</p>
+          <p className="font-semibold text-slate-100">{station.libelle_site}</p>
           <p className="text-xs text-slate-500">
             {station.libelle_commune}
             {station.distance != null ? ` — ${station.distance.toFixed(0)} km` : ''}
@@ -45,20 +45,20 @@ function StationCard({ item }: { item: HydrologyData }) {
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-slate-50 rounded-xl p-3">
+        <div className="bg-[var(--bg-base)] rounded-xl p-3">
           <p className="text-xs text-slate-500 mb-1">Hauteur</p>
-          <p className="font-semibold text-slate-800">
+          <p className="font-semibold text-slate-100">
             {currentHeight != null ? `${currentHeight.toFixed(2)} m` : '—'}
           </p>
         </div>
-        <div className="bg-slate-50 rounded-xl p-3">
+        <div className="bg-[var(--bg-base)] rounded-xl p-3">
           <p className="text-xs text-slate-500 mb-1">Tendance</p>
-          <p className="font-semibold text-slate-800">{TREND_LABELS[trend]}</p>
+          <p className="font-semibold text-slate-100">{TREND_LABELS[trend]}</p>
         </div>
       </div>
 
       {lastObs && (
-        <p className="text-xs text-slate-400 mt-2">
+        <p className="text-xs text-slate-500 mt-2">
           Dernière mesure :{' '}
           {format(new Date(lastObs.date_obs), "d MMM à HH:mm", { locale: fr })}
         </p>
@@ -83,7 +83,7 @@ export default function HydrologyPage() {
 
   return (
     <div className="space-y-4 p-4">
-      <div className="text-sm text-slate-600 bg-blue-50 rounded-xl p-3 border border-blue-100">
+      <div className="text-sm text-slate-300 bg-sky-900/30 rounded-xl p-3 border border-sky-800">
         Données <strong>Vigicrues / Hub'Eau</strong> — Réseau hydrométrique national français.
       </div>
 

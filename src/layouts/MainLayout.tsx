@@ -8,7 +8,7 @@ export default function MainLayout() {
   const isOnline = useOnlineStatus()
 
   return (
-    <div className="flex flex-col h-dvh bg-slate-50">
+    <div className="flex flex-col h-dvh" style={{ backgroundColor: 'var(--bg-base)' }}>
       <TopNav />
       {!isOnline && <OfflineIndicator />}
       <main className="flex-1 overflow-y-auto overflow-x-hidden pb-[calc(var(--nav-height)+var(--safe-bottom))]">

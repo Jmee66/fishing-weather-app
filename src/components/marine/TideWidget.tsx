@@ -18,7 +18,7 @@ export default function TideWidget() {
   return (
     <Card className="space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="font-semibold text-slate-800">Marées — {data.harbourName}</h3>
+        <h3 className="font-semibold text-slate-100">Marées — {data.harbourName}</h3>
         <span className="text-xs text-slate-500">{data.distance.toFixed(0)} km</span>
       </div>
       <div className="grid grid-cols-2 gap-2">
@@ -32,8 +32,8 @@ export default function TideWidget() {
                 <span className="text-xs text-slate-500 font-medium">Coef. {event.coefficient}</span>
               )}
             </div>
-            <div className="text-lg font-bold text-slate-800">{formatTime(event.dt)}</div>
-            <div className="text-sm text-slate-600">{formatHeight(event.height, units)}</div>
+            <div className="text-lg font-bold text-slate-100">{formatTime(event.dt)}</div>
+            <div className="text-sm text-slate-300">{formatHeight(event.height, units)}</div>
           </div>
         ))}
       </div>

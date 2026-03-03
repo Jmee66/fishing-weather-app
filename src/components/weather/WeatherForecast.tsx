@@ -12,20 +12,20 @@ export default function WeatherForecast() {
 
   return (
     <Card padding="none" className="overflow-hidden">
-      <div className="px-4 py-3 border-b border-slate-100">
-        <h3 className="font-semibold text-slate-800 text-sm">Prévisions 7 jours</h3>
+      <div className="px-4 py-3 border-b border-[var(--border-subtle)]">
+        <h3 className="font-semibold text-slate-100 text-sm">Prévisions 7 jours</h3>
       </div>
-      <div className="divide-y divide-slate-50">
+      <div className="divide-y divide-[var(--border-subtle)]">
         {data.daily.slice(0, 7).map((day) => (
           <div key={day.dt} className="flex items-center gap-3 px-4 py-3">
-            <span className="w-16 text-sm text-slate-600 capitalize">{formatShortDate(day.dt)}</span>
+            <span className="w-16 text-sm text-slate-300 capitalize">{formatShortDate(day.dt)}</span>
             <span className="text-base w-6 text-center">{getWeatherEmoji(day.weather[0]?.id ?? 0)}</span>
             <div className="flex-1 text-xs text-slate-500 truncate">{day.weather[0]?.description}</div>
             <div className="flex items-center gap-2 text-sm">
-              <span className="text-slate-800 font-medium">{formatTemperature(day.temp.max, units)}</span>
-              <span className="text-slate-400">{formatTemperature(day.temp.min, units)}</span>
+              <span className="text-slate-100 font-medium">{formatTemperature(day.temp.max, units)}</span>
+              <span className="text-slate-500">{formatTemperature(day.temp.min, units)}</span>
             </div>
-            <div className="text-xs text-blue-600 w-16 text-right">
+            <div className="text-xs text-sky-400 w-16 text-right">
               {day.pop > 0.2 && <span>{Math.round(day.pop * 100)}% 🌧️</span>}
             </div>
           </div>

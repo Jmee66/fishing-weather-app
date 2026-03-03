@@ -3,10 +3,10 @@ import Card from '@/components/ui/Card'
 import Spinner from '@/components/ui/Spinner'
 import type { Coordinates } from '@/types'
 const VIGILANCE_COLORS: Record<number, { bg: string; text: string; label: string; emoji: string }> = {
-  1: { bg: "bg-green-50 border-green-200", text: "text-green-700", label: "Vert", emoji: "🟢" },
+  1: { bg: "bg-green-900/30 border-green-200", text: "text-green-400", label: "Vert", emoji: "🟢" },
   2: { bg: "bg-yellow-50 border-yellow-200", text: "text-yellow-700", label: "Jaune", emoji: "🟡" },
-  3: { bg: "bg-orange-50 border-orange-200", text: "text-orange-700", label: "Orange", emoji: "🟠" },
-  4: { bg: "bg-red-50 border-red-200", text: "text-red-700", label: "Rouge", emoji: "🔴" },
+  3: { bg: "bg-orange-900/30 border-orange-200", text: "text-orange-400", label: "Orange", emoji: "🟠" },
+  4: { bg: "bg-red-900/30 border-red-200", text: "text-red-400", label: "Rouge", emoji: "🔴" },
 }
 const TREND_ICONS: Record<string, string> = { rising: "📈", stable: "➡️", falling: "📉" }
 const TREND_LABELS: Record<string, string> = { rising: "En hausse", stable: "Stable", falling: "En baisse" }
@@ -25,7 +25,7 @@ export default function VigicrueWidget({ coords }: Props) {
     <Card className={`border ${vStyle.bg}`}>
       <div className="flex items-start justify-between mb-2">
         <div>
-          <h3 className="font-semibold text-slate-800 text-sm">{item.station.libelle_site}</h3>
+          <h3 className="font-semibold text-slate-100 text-sm">{item.station.libelle_site}</h3>
           <p className="text-xs text-slate-500">{item.station.libelle_commune}</p>
         </div>
         {vigilance && (
@@ -38,11 +38,11 @@ export default function VigicrueWidget({ coords }: Props) {
       <div className="flex items-center gap-4">
         {item.currentHeight !== undefined && (
           <div>
-            <div className="text-2xl font-bold text-blue-800">{item.currentHeight.toFixed(2)} m</div>
+            <div className="text-2xl font-bold text-sky-300">{item.currentHeight.toFixed(2)} m</div>
             <div className="text-xs text-slate-500">Hauteur actuelle</div>
           </div>
         )}
-        <div className="flex items-center gap-1 text-sm text-slate-600">
+        <div className="flex items-center gap-1 text-sm text-slate-300">
           <span className="text-lg">{TREND_ICONS[item.trend]}</span>
           <span>{TREND_LABELS[item.trend]}</span>
         </div>

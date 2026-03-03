@@ -51,7 +51,7 @@ export default function HomePage() {
       ) : (
         <div className="text-center py-12 space-y-4">
           <div className="text-6xl">📍</div>
-          <h2 className="text-lg font-semibold text-slate-700">Où êtes-vous ?</h2>
+          <h2 className="text-lg font-semibold text-slate-200">Où êtes-vous ?</h2>
           <p className="text-slate-500 text-sm max-w-xs mx-auto">
             Activez la géolocalisation pour afficher météo, marées et conditions de pêche.
           </p>
@@ -74,10 +74,10 @@ export default function HomePage() {
           <Link
             key={to}
             to={to}
-            className="bg-white rounded-2xl border border-slate-100 p-4 hover:shadow-md transition-shadow active:scale-[0.98]"
+            className="bg-[var(--bg-surface)] rounded-2xl border border-[var(--border-subtle)] p-4 hover:shadow-md transition-shadow active:scale-[0.98]"
           >
             <div className="text-2xl mb-1">{icon}</div>
-            <div className="font-semibold text-slate-800 text-sm">{label}</div>
+            <div className="font-semibold text-slate-100 text-sm">{label}</div>
             <div className="text-xs text-slate-500">{desc}</div>
           </Link>
         ))}

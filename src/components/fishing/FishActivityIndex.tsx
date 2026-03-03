@@ -30,10 +30,10 @@ export default function FishActivityIndex() {
           <div className={`font-semibold text-sm ${colorClass} mb-0.5`}>
             🎣 Activité des poissons
           </div>
-          <div className="text-xs text-slate-700">{activity.recommendation}</div>
+          <div className="text-xs text-slate-200">{activity.recommendation}</div>
           <div className="flex gap-2 mt-2 flex-wrap">
             {Object.entries(activity.factors).map(([key, val]) => (
-              <span key={key} className="text-[10px] bg-white rounded px-1.5 py-0.5 text-slate-600 border border-slate-200">
+              <span key={key} className="text-[10px] bg-[var(--bg-surface)] rounded px-1.5 py-0.5 text-slate-300 border border-[var(--border-default)]">
                 {key} {val > 0 ? `+${val.toFixed(1)}` : val.toFixed(1)}
               </span>
             ))}

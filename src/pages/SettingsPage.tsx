@@ -40,7 +40,7 @@ export default function SettingsPage() {
     <div className="space-y-4 p-4">
       {/* Units */}
       <Card>
-        <h2 className="font-semibold text-slate-800 mb-3">Unités</h2>
+        <h2 className="font-semibold text-slate-100 mb-3">Unités</h2>
         <div className="grid grid-cols-3 gap-2">
           {UNIT_OPTIONS.map((opt) => (
             <button
@@ -48,8 +48,8 @@ export default function SettingsPage() {
               onClick={() => setUnits(opt.value)}
               className={`p-2.5 rounded-xl border text-left text-xs transition-colors ${
                 units === opt.value
-                  ? 'border-blue-500 bg-blue-50 text-blue-700'
-                  : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                  ? 'border-blue-500 bg-sky-900/30 text-blue-700'
+                  : 'border-slate-200 text-slate-300 hover:bg-slate-50'
               }`}
             >
               <div className="font-medium">{opt.label}</div>
@@ -61,7 +61,7 @@ export default function SettingsPage() {
 
       {/* API Keys */}
       <Card>
-        <h2 className="font-semibold text-slate-800 mb-3">Clés API</h2>
+        <h2 className="font-semibold text-slate-100 mb-3">Clés API</h2>
         <p className="text-xs text-slate-500 mb-4">
           Stockées uniquement sur votre appareil. Les APIs sans clé (Open-Meteo, Vigicrues, OSM) fonctionnent sans configuration.
         </p>
@@ -69,24 +69,24 @@ export default function SettingsPage() {
           {API_FIELDS.map(({ key, label, placeholder, link, required }) => (
             <div key={key}>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-sm font-medium text-slate-700">
+                <label className="text-sm font-medium text-slate-200">
                   {label}
                   {!required && (
-                    <span className="ml-1 text-xs text-slate-400">(optionnel)</span>
+                    <span className="ml-1 text-xs text-slate-500">(optionnel)</span>
                   )}
                 </label>
                 <a
                   href={link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-blue-600 hover:underline"
+                  className="text-xs text-sky-400 hover:underline"
                 >
                   Obtenir une clé ↗
                 </a>
               </div>
               <input
                 type="password"
-                className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-blue-400 font-mono"
+                className="w-full border border-[var(--border-default)] rounded-xl px-3 py-2 text-sm outline-none focus:border-blue-400 font-mono"
                 placeholder={placeholder}
                 value={apiKeys[key]}
                 onChange={(e) => setApiKey(key, e.target.value)}
@@ -94,13 +94,13 @@ export default function SettingsPage() {
             </div>
           ))}
           <div>
-            <label className="text-sm font-medium text-slate-700 block mb-1">
+            <label className="text-sm font-medium text-slate-200 block mb-1">
               Copernicus Marine (nom d'utilisateur)
-              <span className="ml-1 text-xs text-slate-400">(optionnel)</span>
+              <span className="ml-1 text-xs text-slate-500">(optionnel)</span>
             </label>
             <input
               type="text"
-              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-blue-400"
+              className="w-full border border-[var(--border-default)] rounded-xl px-3 py-2 text-sm outline-none focus:border-blue-400"
               placeholder="Nom d'utilisateur CMEMS..."
               value={apiKeys.copernicus_user}
               onChange={(e) => setApiKey('copernicus_user', e.target.value)}
@@ -111,8 +111,8 @@ export default function SettingsPage() {
 
       {/* Free APIs status */}
       <Card>
-        <h2 className="font-semibold text-slate-800 mb-3">APIs gratuites (sans clé)</h2>
-        <div className="space-y-2 text-sm text-slate-600">
+        <h2 className="font-semibold text-slate-100 mb-3">APIs gratuites (sans clé)</h2>
+        <div className="space-y-2 text-sm text-slate-300">
           {[
             { name: 'Open-Meteo', desc: 'Météo + Vagues + Modèles ECMWF', ok: true },
             { name: "Vigicrues / Hub'Eau", desc: 'Débits rivières France', ok: true },
@@ -122,7 +122,7 @@ export default function SettingsPage() {
           ].map(({ name, desc, ok }) => (
             <div key={name} className="flex items-center justify-between py-1.5 border-b border-slate-50 last:border-0">
               <div>
-                <div className="font-medium text-slate-800">{name}</div>
+                <div className="font-medium text-slate-100">{name}</div>
                 <div className="text-xs text-slate-500">{desc}</div>
               </div>
               <span className="text-xs text-green-600 font-medium">{ok ? '✅ Actif' : '❌'}</span>
@@ -131,7 +131,7 @@ export default function SettingsPage() {
         </div>
       </Card>
 
-      <p className="text-xs text-slate-400 text-center pb-2">
+      <p className="text-xs text-slate-500 text-center pb-2">
         FishWeather v1.0 — PWA React/TypeScript
       </p>
     </div>

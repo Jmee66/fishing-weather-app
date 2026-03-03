@@ -9,7 +9,7 @@ export default class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return this.props.fallback ?? (
-        <div className="p-4 bg-red-50 rounded-xl text-red-700 text-sm">
+        <div className="p-4 bg-red-900/30 rounded-xl text-red-400 text-sm">
           <p className="font-semibold">Une erreur est survenue</p>
           <p className="text-xs mt-1">{this.state.error?.message}</p>
         </div>

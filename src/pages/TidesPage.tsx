@@ -35,24 +35,24 @@ export default function TidesPage() {
         <>
           <Card>
             <p className="text-xs text-slate-500 mb-1">Port de référence</p>
-            <p className="text-xl font-semibold text-slate-800">{tides.harbourName}</p>
+            <p className="text-xl font-semibold text-slate-100">{tides.harbourName}</p>
             <p className="text-sm text-slate-500">
               {tides.distance.toFixed(0)} km de votre position
             </p>
           </Card>
 
           <Card padding="none">
-            <div className="px-4 py-3 border-b border-slate-100">
-              <h3 className="font-semibold text-slate-800 text-sm">Prochaines marées</h3>
+            <div className="px-4 py-3 border-b border-[var(--border-subtle)]">
+              <h3 className="font-semibold text-slate-100 text-sm">Prochaines marées</h3>
             </div>
-            <div className="divide-y divide-slate-50">
+            <div className="divide-y divide-[var(--border-subtle)]">
               {tides.events.map((ev, i) => (
                 <div key={i} className="flex items-center px-4 py-3 gap-3">
                   <Badge color={ev.type === 'PM' ? 'blue' : 'teal'} className="w-10 justify-center">
                     {ev.type}
                   </Badge>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-slate-800 capitalize">
+                    <p className="text-sm font-medium text-slate-100 capitalize">
                       {format(new Date(ev.dt * 1000), "EEEE d MMMM", { locale: fr })}
                     </p>
                     <p className="text-xs text-slate-500">
@@ -61,8 +61,8 @@ export default function TidesPage() {
                   </div>
                   {ev.coefficient != null && (
                     <div className="text-right">
-                      <p className="text-sm font-semibold text-slate-700">{ev.coefficient}</p>
-                      <p className="text-xs text-slate-400">
+                      <p className="text-sm font-semibold text-slate-200">{ev.coefficient}</p>
+                      <p className="text-xs text-slate-500">
                         {ev.coefficient >= 95 ? 'Grandes VE' :
                          ev.coefficient >= 80 ? 'Vives-eaux' :
                          ev.coefficient >= 45 ? 'Moyennes' : 'Mortes-eaux'}
@@ -74,7 +74,7 @@ export default function TidesPage() {
             </div>
           </Card>
 
-          <div className="text-xs text-slate-400 text-center">
+          <div className="text-xs text-slate-500 text-center">
             Données SHOM — Service Hydrographique et Océanographique de la Marine
           </div>
         </>

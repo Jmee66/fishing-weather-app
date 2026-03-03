@@ -78,16 +78,16 @@ export default function EphemeridePage() {
       )}
 
       <Card padding="none">
-        <div className="px-4 py-3 border-b border-slate-100">
-          <h3 className="font-semibold text-slate-800 text-sm">Éphéméride 7 jours</h3>
+        <div className="px-4 py-3 border-b border-[var(--border-subtle)]">
+          <h3 className="font-semibold text-slate-100 text-sm">Éphéméride 7 jours</h3>
         </div>
-        <div className="divide-y divide-slate-50">
+        <div className="divide-y divide-[var(--border-subtle)]">
           {days.map((day) => {
             const eph = getEphemeris(day, coords.lat, coords.lon)
             return (
               <div key={day.toDateString()} className="px-4 py-2.5">
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-sm font-medium text-slate-700 capitalize">
+                  <span className="text-sm font-medium text-slate-200 capitalize">
                     {format(day, 'EEEE d MMM', { locale: fr })}
                   </span>
                   <span className="text-sm">
@@ -104,7 +104,7 @@ export default function EphemeridePage() {
                     <div>{fmt(eph.sunset)}</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-slate-400">🌙</div>
+                    <div className="text-slate-500">🌙</div>
                     <div>{fmt(eph.moonrise)}</div>
                   </div>
                   <div className="text-center">

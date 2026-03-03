@@ -82,7 +82,7 @@ export default function MapPage() {
       <button
         onClick={locate}
         disabled={isLocating}
-        className="absolute bottom-6 right-4 z-[1000] bg-white rounded-full p-3 shadow-lg border border-slate-200 hover:bg-slate-50 active:scale-95 transition-transform"
+        className="absolute bottom-6 right-4 z-[1000] bg-[var(--bg-surface)] rounded-full p-3 shadow-lg border border-[var(--border-default)] hover:bg-[var(--bg-elevated)] active:scale-95 transition-transform"
         title="Me localiser"
       >
         {isLocating ? '⌛' : '📍'}

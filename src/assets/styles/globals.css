@@ -1,15 +1,32 @@
 @import "tailwindcss";
 
 :root {
-  --color-primary: #0f4c81;
-  --color-primary-light: #1a6bbf;
-  --color-sea: #006994;
-  --color-sea-light: #0099cc;
-  --color-marine: #003d5b;
-  --color-freshwater: #2e7d32;
-  --color-warning: #f97316;
-  --color-danger: #ef4444;
-  --color-success: #22c55e;
+  /* Brand */
+  --color-primary: #38bdf8;
+  --color-primary-dark: #0ea5e9;
+  --color-sea: #22d3ee;
+  --color-marine: #67e8f9;
+  --color-freshwater: #4ade80;
+  --color-warning: #fb923c;
+  --color-danger: #f87171;
+  --color-success: #4ade80;
+
+  /* Dark surfaces */
+  --bg-base: #0d1117;
+  --bg-surface: #161b22;
+  --bg-elevated: #21262d;
+  --bg-overlay: #30363d;
+
+  /* Text */
+  --text-primary: #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted: #484f58;
+
+  /* Borders */
+  --border-subtle: #21262d;
+  --border-default: #30363d;
+
+  /* Nav */
   --nav-height: 4rem;
   --header-height: 3.5rem;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -19,7 +36,9 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-body {
+html, body {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   overscroll-behavior: none;
   -webkit-overflow-scrolling: touch;
@@ -55,6 +74,6 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: var(--bg-overlay);
   border-radius: 2px;
 }

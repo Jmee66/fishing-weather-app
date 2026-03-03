@@ -59,7 +59,7 @@ export default function MarinePage() {
           <div className="grid grid-cols-2 gap-3">
             <Card>
               <p className="text-xs text-slate-500 mb-1">Hauteur vague</p>
-              <p className="text-2xl font-semibold text-blue-700">
+              <p className="text-2xl font-semibold text-sky-300">
                 {currentMarine.wave_height.toFixed(1)} m
               </p>
               <p className="text-sm text-slate-500">
@@ -68,7 +68,7 @@ export default function MarinePage() {
             </Card>
             <Card>
               <p className="text-xs text-slate-500 mb-1">Vent offshore</p>
-              <p className="text-2xl font-semibold text-slate-800">
+              <p className="text-2xl font-semibold text-slate-100">
                 {formatWindSpeed(currentMarine.wind_speed_10m, units)}
               </p>
               <p className="text-sm text-slate-500">
@@ -78,13 +78,13 @@ export default function MarinePage() {
             </Card>
             <Card>
               <p className="text-xs text-slate-500 mb-1">Période vague</p>
-              <p className="text-2xl font-semibold text-slate-800">
+              <p className="text-2xl font-semibold text-slate-100">
                 {currentMarine.wave_period?.toFixed(0) ?? '—'} s
               </p>
             </Card>
             <Card>
               <p className="text-xs text-slate-500 mb-1">Direction houle</p>
-              <p className="text-2xl font-semibold text-slate-800">
+              <p className="text-2xl font-semibold text-slate-100">
                 {currentMarine.wave_direction?.toFixed(0) ?? '—'}°
               </p>
             </Card>
@@ -94,16 +94,16 @@ export default function MarinePage() {
 
       {tab === 'waves' && marine && (
         <Card padding="none">
-          <div className="px-4 py-3 border-b border-slate-100 font-semibold text-sm text-slate-700">
+          <div className="px-4 py-3 border-b border-[var(--border-subtle)] font-semibold text-sm text-slate-200">
             Prévisions vagues 48h
           </div>
-          <div className="divide-y divide-slate-50">
+          <div className="divide-y divide-[var(--border-subtle)]">
             {marine.hourly.slice(0, 48).filter((_, i) => i % 3 === 0).map((h) => (
               <div key={h.dt} className="flex items-center px-4 py-2.5 gap-3">
                 <span className="text-slate-500 text-sm w-14">
                   {format(new Date(h.dt * 1000), 'HH:mm')}
                 </span>
-                <span className="font-semibold text-blue-700 w-16">
+                <span className="font-semibold text-sky-300 w-16">
                   {h.wave_height.toFixed(1)} m
                 </span>
                 <div className="flex-1 text-xs text-slate-500">
@@ -122,10 +122,10 @@ export default function MarinePage() {
           {tides && (
             <div className="space-y-3">
               <Card>
-                <p className="text-sm font-medium text-slate-700 mb-1">
+                <p className="text-sm font-medium text-slate-200 mb-1">
                   Port de référence
                 </p>
-                <p className="text-lg font-semibold text-slate-800">
+                <p className="text-lg font-semibold text-slate-100">
                   {tides.harbourName}
                 </p>
                 <p className="text-sm text-slate-500">
@@ -133,14 +133,14 @@ export default function MarinePage() {
                 </p>
               </Card>
               <Card padding="none">
-                <div className="divide-y divide-slate-50">
+                <div className="divide-y divide-[var(--border-subtle)]">
                   {tides.events.slice(0, 12).map((ev, i) => (
                     <div key={i} className="flex items-center px-4 py-3 gap-3">
                       <Badge color={ev.type === 'PM' ? 'blue' : 'slate'}>
                         {ev.type}
                       </Badge>
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-slate-800">
+                        <p className="text-sm font-medium text-slate-100">
                           {format(new Date(ev.dt * 1000), "EEEE d MMM 'à' HH:mm", { locale: fr })}
                         </p>
                         <p className="text-xs text-slate-500">

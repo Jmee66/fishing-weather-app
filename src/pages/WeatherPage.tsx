@@ -66,7 +66,7 @@ export default function WeatherPage() {
             className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
               weatherModel === key
                 ? 'bg-blue-600 text-white'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                : 'bg-slate-100 text-slate-300 hover:bg-slate-200'
             }`}
           >
             {label}
@@ -93,13 +93,13 @@ export default function WeatherPage() {
           <Card>
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-5xl font-light text-slate-800">
+                <p className="text-5xl font-light text-slate-100">
                   {formatTemperature(cur.temp, units)}
                 </p>
                 <p className="text-slate-500 mt-1 capitalize">
                   {weatherCondition?.description ?? '—'}
                 </p>
-                <p className="text-slate-400 text-sm mt-1">
+                <p className="text-slate-500 text-sm mt-1">
                   Ressenti {formatTemperature(cur.feels_like, units)}
                 </p>
               </div>
@@ -112,7 +112,7 @@ export default function WeatherPage() {
           <div className="grid grid-cols-2 gap-3">
             <Card>
               <p className="text-xs text-slate-500 mb-1">Vent</p>
-              <p className="font-semibold text-slate-800">
+              <p className="font-semibold text-slate-100">
                 {formatWindSpeed(cur.wind_speed, units)}
               </p>
               <p className="text-sm text-slate-500">
@@ -122,18 +122,18 @@ export default function WeatherPage() {
             </Card>
             <Card>
               <p className="text-xs text-slate-500 mb-1">Pression</p>
-              <p className="font-semibold text-slate-800">{cur.pressure} hPa</p>
+              <p className="font-semibold text-slate-100">{cur.pressure} hPa</p>
               <p className="text-sm text-slate-500">Hum. {cur.humidity}%</p>
             </Card>
             <Card>
               <p className="text-xs text-slate-500 mb-1">Visibilité</p>
-              <p className="font-semibold text-slate-800">
+              <p className="font-semibold text-slate-100">
                 {(cur.visibility / 1000).toFixed(1)} km
               </p>
             </Card>
             <Card>
               <p className="text-xs text-slate-500 mb-1">UV / Nuages</p>
-              <p className="font-semibold text-slate-800">UV {cur.uvi?.toFixed(0) ?? '—'}</p>
+              <p className="font-semibold text-slate-100">UV {cur.uvi?.toFixed(0) ?? '—'}</p>
               <p className="text-sm text-slate-500">Couverture {cur.clouds}%</p>
             </Card>
           </div>
@@ -148,7 +148,7 @@ export default function WeatherPage() {
 
       {data && tab === 'hourly' && (
         <Card padding="none">
-          <div className="divide-y divide-slate-50">
+          <div className="divide-y divide-[var(--border-subtle)]">
             {data.hourly.slice(0, 24).map((h) => {
               const cond = h.weather?.[0]
               return (
@@ -159,7 +159,7 @@ export default function WeatherPage() {
                   <span className="text-xl w-8">
                     {cond ? wmoIcon(cond.id) : '🌡️'}
                   </span>
-                  <span className="font-semibold text-slate-800 text-sm w-16">
+                  <span className="font-semibold text-slate-100 text-sm w-16">
                     {formatTemperature(h.temp, units)}
                   </span>
                   <div className="flex-1 text-xs text-slate-500">
@@ -180,25 +180,25 @@ export default function WeatherPage() {
 
       {data && tab === 'daily' && (
         <Card padding="none">
-          <div className="divide-y divide-slate-50">
+          <div className="divide-y divide-[var(--border-subtle)]">
             {data.daily.map((d) => {
               const cond = d.weather?.[0]
               return (
                 <div key={d.dt} className="flex items-center px-4 py-3 gap-3">
                   <div className="w-24">
-                    <p className="text-sm font-medium text-slate-700 capitalize">
+                    <p className="text-sm font-medium text-slate-200 capitalize">
                       {format(new Date(d.dt * 1000), 'EEEE', { locale: fr })}
                     </p>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-slate-500">
                       {format(new Date(d.dt * 1000), 'd MMM', { locale: fr })}
                     </p>
                   </div>
                   <span className="text-xl">{cond ? wmoIcon(cond.id) : '🌡️'}</span>
-                  <div className="flex-1 text-sm text-slate-600 text-right">
-                    <span className="font-semibold text-slate-800">
+                  <div className="flex-1 text-sm text-slate-300 text-right">
+                    <span className="font-semibold text-slate-100">
                       {formatTemperature(d.temp.max, units)}
                     </span>
-                    <span className="text-slate-400 mx-1">/</span>
+                    <span className="text-slate-500 mx-1">/</span>
                     <span>{formatTemperature(d.temp.min, units)}</span>
                   </div>
                   {d.rain != null && d.rain > 0 && (

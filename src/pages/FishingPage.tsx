@@ -54,7 +54,7 @@ export default function FishingPage() {
             <div className="text-center py-10">
               <div className="text-4xl mb-3">📌</div>
               <p className="text-slate-500 text-sm">Aucun spot enregistré.</p>
-              <p className="text-slate-400 text-xs mt-1">
+              <p className="text-slate-500 text-xs mt-1">
                 Longue pression sur la carte pour ajouter un spot.
               </p>
             </div>
@@ -63,14 +63,14 @@ export default function FishingPage() {
               <Card key={spot.id}>
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="font-semibold text-slate-800">{spot.name}</p>
+                    <p className="font-semibold text-slate-100">{spot.name}</p>
                     <Badge color="blue" className="mt-1">
                       {CATEGORY_LABELS[spot.category] ?? spot.category}
                     </Badge>
                     {spot.description && (
                       <p className="text-sm text-slate-500 mt-1">{spot.description}</p>
                     )}
-                    <p className="text-xs text-slate-400 mt-1 font-mono">
+                    <p className="text-xs text-slate-500 mt-1 font-mono">
                       {spot.coordinates.lat.toFixed(4)}°N, {spot.coordinates.lon.toFixed(4)}°E
                     </p>
                   </div>
@@ -92,7 +92,7 @@ export default function FishingPage() {
             log.map((entry) => (
               <Card key={entry.id}>
                 <div className="flex items-start justify-between mb-2">
-                  <p className="font-semibold text-slate-800">
+                  <p className="font-semibold text-slate-100">
                     {format(new Date(entry.date), "d MMMM yyyy", { locale: fr })}
                   </p>
                   <Badge color={entry.catches.length > 0 ? 'green' : 'slate'}>
@@ -134,7 +134,7 @@ export default function FishingPage() {
                 {fishActivity ? (
                   <>
                     <div className="flex items-end gap-3 mb-3">
-                      <p className="text-5xl font-bold text-slate-800">
+                      <p className="text-5xl font-bold text-slate-100">
                         {fishActivity.total.toFixed(1)}
                       </p>
                       <p className="text-xl font-semibold text-slate-500 mb-1">/ 10</p>
@@ -149,7 +149,7 @@ export default function FishingPage() {
                         {fishActivity.label}
                       </Badge>
                     </div>
-                    <div className="w-full bg-slate-100 rounded-full h-2 mb-3">
+                    <div className="w-full bg-[var(--bg-elevated)] rounded-full h-2 mb-3">
                       <div
                         className={`h-2 rounded-full transition-all ${
                           fishActivity.total >= 7 ? 'bg-green-500' :
@@ -168,7 +168,7 @@ export default function FishingPage() {
                         </li>
                       ))}
                     </ul>
-                    <p className="text-xs text-slate-400 mt-2">{fishActivity.recommendation}</p>
+                    <p className="text-xs text-slate-500 mt-2">{fishActivity.recommendation}</p>
                   </>
                 ) : (
                   <Spinner />
@@ -189,8 +189,8 @@ export default function FishingPage() {
               <Card key={spec.id}>
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="font-semibold text-slate-800">{spec.name}</p>
-                    <p className="text-xs text-slate-400 italic">{spec.scientificName}</p>
+                    <p className="font-semibold text-slate-100">{spec.name}</p>
+                    <p className="text-xs text-slate-500 italic">{spec.scientificName}</p>
                   </div>
                   <Badge color={defaultSize ? 'blue' : 'slate'}>
                     {defaultSize ? `≥ ${defaultSize} cm` : 'Pas de taille min.'}
