@@ -16,6 +16,31 @@ const MODEL_LABELS: Record<string, string> = {
   arpege: 'ARPEGE 10km', gfs: 'GFS', ecmwf: 'ECMWF', icon: 'ICON',
 }
 
+/** Arrow pointing in the direction the wind is blowing (meteorological convention: rotate +180) */
+function WindArrow({ deg, color = '#38bdf8', size = 28 }: { deg: number; color?: string; size?: number }) {
+  const rotate = deg + 180
+  return (
+    <svg
+      width={size} height={size} viewBox="0 0 24 24"
+      style={{ transform: `rotate(${rotate}deg)`, display: 'inline-block', flexShrink: 0 }}
+    >
+      <line x1="12" y1="20" x2="12" y2="5" stroke={color} strokeWidth="2.5" strokeLinecap="round" />
+      <polyline points="8,10 12,4 16,10" fill={color} stroke={color} strokeWidth="1.5" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+function getBeaufortColor(speed_ms: number): string {
+  if (speed_ms < 1)  return '#94a3b8'
+  if (speed_ms < 3)  return '#7dd3fc'
+  if (speed_ms < 6)  return '#38bdf8'
+  if (speed_ms < 10) return '#34d399'
+  if (speed_ms < 14) return '#fbbf24'
+  if (speed_ms < 18) return '#f97316'
+  if (speed_ms < 24) return '#ef4444'
+  return '#dc2626'
+}
+
 const WMO_ICONS: Record<number, string> = {
   0: '☀️', 1: '🌤️', 2: '⛅', 3: '☁️',
   45: '🌫️', 48: '🌫️',
@@ -65,19 +90,23 @@ export default function WeatherPage() {
     <div className="space-y-3 p-4">
       {/* Model selector */}
       <div className="flex gap-2 overflow-x-auto pb-1">
-        {Object.entries(MODEL_LABELS).map(([key, label]) => (
-          <button
-            key={key}
-            onClick={() => setWeatherModel(key as any)}
-            className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-              weatherModel === key
-                ? 'bg-blue-600 text-white'
-                : 'bg-slate-100 text-slate-300 hover:bg-slate-200'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
+        {Object.entries(MODEL_LABELS).map(([key, label]) => {
+          const isActive = weatherModel === key
+          return (
+            <button
+              key={key}
+              onClick={() => setWeatherModel(key as any)}
+              className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors"
+              style={{
+                backgroundColor: isActive ? 'rgb(37 99 235 / 0.8)' : 'var(--bg-surface)',
+                color: isActive ? '#e0f2fe' : 'var(--text-secondary)',
+                border: `1px solid ${isActive ? 'rgb(56 189 248 / 0.5)' : 'var(--border-default)'}`,
+              }}
+            >
+              {label}
+            </button>
+          )
+        })}
       </div>
 
       <Tabs tabs={tabs} activeTab={tab} onChange={setTab} />
@@ -117,13 +146,26 @@ export default function WeatherPage() {
 
           <div className="grid grid-cols-2 gap-3">
             <Card>
-              <p className="text-xs text-slate-500 mb-1">Vent</p>
-              <p className="font-semibold text-slate-100">
-                {formatWindSpeed(cur.wind_speed, units)}
-              </p>
-              <p className="text-sm text-slate-500">
+              <p className="text-xs text-slate-500 mb-2">Vent</p>
+              <div className="flex items-center gap-2 mb-1">
+                {cur.wind_deg != null && (
+                  <WindArrow
+                    deg={cur.wind_deg}
+                    color={getBeaufortColor(cur.wind_speed)}
+                    size={28}
+                  />
+                )}
+                <p className="font-semibold text-slate-100">
+                  {formatWindSpeed(cur.wind_speed, units)}
+                </p>
+              </div>
+              <p className="text-xs text-slate-500">
                 {getWindDirectionLabel(cur.wind_deg)}
-                {cur.wind_gust != null && ` — Raf. ${formatWindSpeed(cur.wind_gust, units)}`}
+                {cur.wind_gust != null && (
+                  <span className="ml-1 text-orange-400">
+                    Raf. {formatWindSpeed(cur.wind_gust, units)}
+                  </span>
+                )}
               </p>
             </Card>
             <Card>
@@ -159,21 +201,29 @@ export default function WeatherPage() {
               const cond = h.weather?.[0]
               return (
                 <div key={h.dt} className="flex items-center px-4 py-2.5 gap-3">
-                  <span className="text-slate-500 text-sm w-12">
+                  <span className="text-slate-500 text-sm w-12 flex-shrink-0">
                     {format(new Date(h.dt * 1000), 'HH:mm')}
                   </span>
-                  <span className="text-xl w-8">
+                  <span className="text-xl w-8 flex-shrink-0">
                     {cond ? wmoIcon(cond.id) : '🌡️'}
                   </span>
-                  <span className="font-semibold text-slate-100 text-sm w-16">
+                  <span className="font-semibold text-slate-100 text-sm w-14 flex-shrink-0">
                     {formatTemperature(h.temp, units)}
                   </span>
-                  <div className="flex-1 text-xs text-slate-500">
-                    {formatWindSpeed(h.wind_speed, units)}{' '}
-                    {getWindDirectionLabel(h.wind_deg)}
+                  <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                    {h.wind_deg != null && (
+                      <WindArrow
+                        deg={h.wind_deg}
+                        color={getBeaufortColor(h.wind_speed)}
+                        size={16}
+                      />
+                    )}
+                    <span className="text-xs text-slate-400">
+                      {formatWindSpeed(h.wind_speed, units)}
+                    </span>
                     {h.pop > 0.2 && (
-                      <span className="ml-2 text-blue-500">
-                        {Math.round(h.pop * 100)}% pluie
+                      <span className="ml-1 text-xs text-blue-400">
+                        {Math.round(h.pop * 100)}%
                       </span>
                     )}
                   </div>
