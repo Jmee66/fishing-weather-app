@@ -5,6 +5,7 @@ import tailwindcss from '@tailwindcss/vite'
 import { resolve } from 'path'
 
 export default defineConfig({
+  base: '/fishing-weather-app/',
   plugins: [
     react(),
     tailwindcss(),
@@ -103,8 +104,8 @@ export default defineConfig({
         background_color: '#f0f9ff',
         display: 'standalone',
         orientation: 'any',
-        scope: '/',
-        start_url: '/',
+        scope: '/fishing-weather-app/',
+        start_url: '/fishing-weather-app/',
         categories: ['weather', 'sports', 'navigation'],
         icons: [
           { src: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
