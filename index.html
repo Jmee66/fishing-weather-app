@@ -19,13 +19,12 @@
     <script>
       // Restaure l'URL encodée par 404.html (SPA redirect trick pour GitHub Pages)
       (function() {
-        var p = window.location.search.slice(1).split('&')
-          .find(function(s) { return s.startsWith('p=') })
-        if (p) {
-          var decoded = decodeURIComponent(p.slice(2))
-          window.history.replaceState(null, null,
-            window.location.pathname.replace(/\/$/, '') + decoded || '/'
-          )
+        var qs = window.location.search.slice(1)
+        var match = qs.match(/(?:^|&)p=([^&]*)/)
+        if (match) {
+          var decoded = decodeURIComponent(match[1])
+          var base = '/fishing-weather-app'
+          window.history.replaceState(null, null, base + decoded)
         }
       })()
     </script>
