@@ -5,11 +5,12 @@ import { useLocationStore } from '@/stores/location.store'
 import type { FavouriteLocation } from '@/stores/location.store'
 import { geocodingService } from '@/services/api/geocoding.service'
 import type { GeocodingResult } from '@/types'
-import { IconGPS, IconStar, IconMap, IconSun, IconWave, IconFish, IconMoon, IconRiver } from '@/components/ui/icons/WeatherIcons'
+import { IconGPS, IconStar, IconMap, IconSun, IconWave, IconFish, IconMoon } from '@/components/ui/icons/WeatherIcons'
 import CurrentWeather from '@/components/weather/CurrentWeather'
 import TideWidget from '@/components/marine/TideWidget'
 import FishActivityIndex from '@/components/fishing/FishActivityIndex'
 import SunMoonWidget from '@/components/ephemeris/SunMoonWidget'
+import VigicrueWidget from '@/components/hydrology/VigicrueWidget'
 
 // ── Icônes SVG simples (non disponibles dans WeatherIcons) ───────────────────
 const IconSearch = () => (
@@ -30,12 +31,11 @@ const IconPin = () => (
 
 // ── Liens rapides ────────────────────────────────────────────────────────────
 const QUICK_LINKS = [
-  { to: '/weather',   label: 'Météo',       desc: 'Prévisions 7 jours', Icon: IconSun,   accent: false },
-  { to: '/marine',    label: 'Marine',      desc: 'Vagues & marées',    Icon: IconWave,  accent: false },
-  { to: '/hydrology', label: 'Vigicrues',   desc: 'Rivières & débits',  Icon: IconRiver, accent: true  },
-  { to: '/fishing',   label: 'Pêche',       desc: 'Carnet & conditions',Icon: IconFish,  accent: false },
-  { to: '/map',       label: 'Carte',       desc: 'Spots & navigation', Icon: IconMap,   accent: false },
-  { to: '/ephemeris', label: 'Éphéméride',  desc: 'Soleil & lune',      Icon: IconMoon,  accent: false },
+  { to: '/weather',   label: 'Météo',       desc: 'Prévisions 7 jours', Icon: IconSun,  accent: false },
+  { to: '/marine',    label: 'Marine',      desc: 'Vagues & marées',    Icon: IconWave, accent: false },
+  { to: '/fishing',   label: 'Pêche',       desc: 'Spots & Vigicrues',  Icon: IconFish, accent: false },
+  { to: '/map',       label: 'Carte',       desc: 'Spots & navigation', Icon: IconMap,  accent: false },
+  { to: '/ephemeris', label: 'Éphéméride',  desc: 'Soleil & lune',      Icon: IconMoon, accent: false },
 ]
 
 // ── Catégorie ────────────────────────────────────────────────────────────────
@@ -312,6 +312,9 @@ export default function HomePage() {
               <FishActivityIndex />
             </Link>
           </div>
+          <Link to="/fishing?tab=rivieres" className="block hover:opacity-90 transition-opacity">
+            <VigicrueWidget coords={activeCoords ?? undefined} />
+          </Link>
           <Link to="/ephemeris" className="block hover:opacity-90 transition-opacity">
             <SunMoonWidget />
           </Link>

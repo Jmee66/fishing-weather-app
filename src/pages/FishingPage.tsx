@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import Tabs from '@/components/ui/Tabs'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
@@ -9,6 +10,7 @@ import { useFishActivity } from '@/hooks/useFishActivity'
 import { SPECIES_REGULATIONS } from '@/constants/fishing.constants'
 import SpotForm from '@/components/fishing/SpotForm'
 import LogEntryForm from '@/components/fishing/LogEntryForm'
+import HydrologyPage from '@/pages/HydrologyPage'
 import type { FishingSpot, FishingLogEntry } from '@/types'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
@@ -37,7 +39,13 @@ const IconTrash = () => (
 )
 
 export default function FishingPage() {
-  const [tab, setTab] = useState('spots')
+  const [searchParams] = useSearchParams()
+  const [tab, setTab] = useState(() => searchParams.get('tab') ?? 'spots')
+
+  useEffect(() => {
+    const t = searchParams.get('tab')
+    if (t) setTab(t)
+  }, [searchParams])
   const [showSpotForm, setShowSpotForm] = useState(false)
   const [showLogForm, setShowLogForm] = useState(false)
   const [editingSpot, setEditingSpot] = useState<FishingSpot | undefined>()
@@ -58,7 +66,8 @@ export default function FishingPage() {
     { id: 'spots', label: 'Spots' },
     { id: 'log', label: 'Carnet' },
     { id: 'conditions', label: 'Conditions' },
-    { id: 'reglementation', label: 'Réglementation' },
+    { id: 'rivieres', label: 'Rivières' },
+    { id: 'reglementation', label: 'Règles' },
   ]
 
   const speciesList = Object.values(SPECIES_REGULATIONS)
@@ -305,6 +314,11 @@ export default function FishingPage() {
             )
           })}
         </div>
+      )}
+
+      {/* ── Rivières (Vigicrues) ── */}
+      {tab === 'rivieres' && (
+        <HydrologyPage embedded />
       )}
 
       {/* ── Modals ── */}

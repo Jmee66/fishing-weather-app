@@ -121,7 +121,7 @@ function StationCard({ item }: { item: HydrologyData }) {
   )
 }
 
-export default function HydrologyPage() {
+export default function HydrologyPage({ embedded = false }: { embedded?: boolean }) {
   const selectedLat = useLocationStore((s) => s.selectedLocation?.lat)
   const selectedLon = useLocationStore((s) => s.selectedLocation?.lon)
   const currentLat  = useLocationStore((s) => s.currentPosition?.lat)
@@ -133,7 +133,7 @@ export default function HydrologyPage() {
 
   if (!coords) {
     return (
-      <div className="p-4">
+      <div className={embedded ? '' : 'p-4'}>
         <Alert type="info" title="Position requise">
           Activez la géolocalisation pour voir les stations hydrométriques proches.
         </Alert>
@@ -142,7 +142,7 @@ export default function HydrologyPage() {
   }
 
   return (
-    <div className="space-y-3 p-4">
+    <div className={`space-y-3 ${embedded ? '' : 'p-4'}`}>
       <div className="text-sm text-slate-300 bg-sky-900/30 rounded-xl p-3 border border-sky-800/60">
         <strong>Vigicrues / Hub'Eau</strong> — Réseau hydrométrique national · Stations à 30 km
       </div>
