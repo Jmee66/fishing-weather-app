@@ -1,9 +1,72 @@
+import { useState } from 'react'
+import type { ChangeEvent } from 'react'
 import { useSettingsStore } from '@/stores/settings.store'
+import { useLocationStore } from '@/stores/location.store'
+import { useFishingStore } from '@/stores/fishing.store'
+import { spotsStorage } from '@/services/storage/spots.storage'
+import { logStorage } from '@/services/storage/log.storage'
+import { exportBackup, importBackup } from '@/services/storage/backup.service'
 import Card from '@/components/ui/Card'
 import type { ApiKeys, UnitSystem, WeatherSource, WeatherModel } from '@/types'
 
 export default function SettingsPage() {
-  const { apiKeys, units, weatherSource, weatherModel, setApiKey, setUnits, setWeatherSource, setWeatherModel } = useSettingsStore()
+  const { apiKeys, units, weatherSource, weatherModel, defaultTileSource, activeLayers, defaultLocation, language, setApiKey, setUnits, setWeatherSource, setWeatherModel } = useSettingsStore()
+  const { favourites } = useLocationStore()
+
+  const [isExporting, setIsExporting] = useState(false)
+  const [importStatus, setImportStatus] = useState<{ ok: boolean; message: string } | null>(null)
+
+  const handleExport = async () => {
+    setIsExporting(true)
+    try {
+      await exportBackup(
+        { weatherSource, weatherModel, units, defaultTileSource, activeLayers, defaultLocation, language, apiKeys },
+        favourites
+      )
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
+  const handleImport = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setImportStatus(null)
+    try {
+      const data = await importBackup(file)
+      // 1. Restaurer settings
+      useSettingsStore.setState({
+        weatherSource: data.settings.weatherSource,
+        weatherModel: data.settings.weatherModel,
+        units: data.settings.units,
+        defaultTileSource: data.settings.defaultTileSource,
+        activeLayers: data.settings.activeLayers,
+        defaultLocation: data.settings.defaultLocation,
+        language: data.settings.language,
+        apiKeys: data.settings.apiKeys,
+      })
+      // 2. Restaurer favoris
+      useLocationStore.setState({ favourites: data.favourites })
+      // 3. Restaurer spots IndexedDB
+      for (const spot of data.spots) await spotsStorage.save(spot)
+      // 4. Restaurer carnet IndexedDB
+      for (const entry of data.log) await logStorage.save(entry)
+      // 5. Forcer rechargement fishing store
+      useFishingStore.setState({ isLoaded: false })
+      setImportStatus({
+        ok: true,
+        message: `✅ Restauration réussie — ${data.spots.length} spot${data.spots.length > 1 ? 's' : ''}, ${data.log.length} sortie${data.log.length > 1 ? 's' : ''}, ${data.favourites.length} favori${data.favourites.length > 1 ? 's' : ''}. Rechargement dans 2s…`,
+      })
+      setTimeout(() => window.location.reload(), 2000)
+    } catch (err) {
+      setImportStatus({
+        ok: false,
+        message: `❌ Fichier invalide : ${err instanceof Error ? err.message : 'format incorrect'}`,
+      })
+    }
+    // Reset input pour permettre re-import du même fichier
+    e.target.value = ''
+  }
 
   const API_FIELDS: Array<{
     key: keyof ApiKeys
@@ -62,6 +125,34 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-4 p-4">
+
+      {/* Sauvegarde & Restauration */}
+      <Card>
+        <h2 className="font-semibold text-slate-100 mb-1">Sauvegarde & Restauration</h2>
+        <p className="text-xs text-slate-500 mb-4">
+          Exporte clés API, préférences, favoris, spots et carnet dans un fichier JSON local.
+        </p>
+
+        <button
+          onClick={handleExport}
+          disabled={isExporting}
+          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-sky-500/40 bg-sky-900/20 text-sky-300 text-sm font-medium hover:bg-sky-900/40 transition-colors disabled:opacity-50"
+        >
+          {isExporting ? '⏳ Export en cours…' : '📥 Exporter la sauvegarde'}
+        </button>
+
+        <label className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-slate-600 bg-[var(--bg-surface)] text-slate-300 text-sm font-medium hover:bg-[var(--bg-elevated)] transition-colors cursor-pointer">
+          📤 Importer une sauvegarde
+          <input type="file" accept=".json" className="hidden" onChange={handleImport} />
+        </label>
+
+        {importStatus && (
+          <div className={`mt-3 p-3 rounded-xl text-xs ${importStatus.ok ? 'bg-green-900/30 border border-green-700/40 text-green-300' : 'bg-red-900/30 border border-red-700/40 text-red-300'}`}>
+            {importStatus.message}
+          </div>
+        )}
+      </Card>
+
       {/* Weather Source */}
       <Card>
         <h2 className="font-semibold text-slate-100 mb-3">Source météo</h2>
