@@ -28,8 +28,11 @@ export default function WindWidget({ windSpeed, windDeg, windGust, compact = fal
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline gap-1">
           <span className="text-xl font-bold text-slate-100">{formatWindSpeed(windSpeed, units)}</span>
-          {windGust && (
-            <span className="text-sm text-slate-500">rafales {formatWindSpeed(windGust, units)}</span>
+          {windGust && windGust > windSpeed * 1.05 && (
+            <span className="text-sm text-slate-500 ml-1">
+              → <span className="text-amber-400 font-semibold">{formatWindSpeed(windGust, units)}</span>
+              <span className="text-slate-600 text-xs"> raf.</span>
+            </span>
           )}
         </div>
         <div className="flex items-center gap-2 text-xs text-slate-300">

@@ -167,9 +167,9 @@ export default function WeatherPage() {
               </div>
               <p className="text-xs text-slate-500">
                 {getWindDirectionLabel(cur.wind_deg)}
-                {cur.wind_gust != null && (
+                {cur.wind_gust != null && cur.wind_gust > cur.wind_speed * 1.05 && (
                   <span className="ml-1 text-orange-400">
-                    Raf. {formatWindSpeed(cur.wind_gust, units)}
+                    {formatWindSpeed(cur.wind_speed, units)} → {formatWindSpeed(cur.wind_gust, units)} raf.
                   </span>
                 )}
               </p>
@@ -234,7 +234,7 @@ export default function WeatherPage() {
                     )}
                     {h.wind_gust != null && h.wind_gust > h.wind_speed * 1.1 && (
                       <span className="text-xs text-amber-400 flex-shrink-0">
-                        raf.{formatWindSpeed(h.wind_gust, units)}
+                        {formatWindSpeed(h.wind_speed, units)} → {formatWindSpeed(h.wind_gust, units)}
                       </span>
                     )}
                   </div>

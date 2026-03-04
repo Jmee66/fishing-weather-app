@@ -374,16 +374,15 @@ export default function MarinePage() {
               </div>
             </div>
 
-            {now.wind_gusts_10m > 0 && (
+            {now.wind_gusts_10m > now.wind_speed_10m * 1.05 && (
               <div className="flex items-center gap-2 py-2 px-3 rounded-xl mb-2" style={{ backgroundColor: 'var(--bg-base)' }}>
                 <span className="text-amber-400 text-base">💨</span>
                 <div>
                   <p className="text-xs text-slate-500">Rafales</p>
                   <p className="font-semibold text-amber-300 text-sm">
+                    {formatWindSpeed(now.wind_speed_10m, units)}
+                    <span className="text-slate-400 font-normal mx-1">→</span>
                     {formatWindSpeed(now.wind_gusts_10m, units)}
-                    <span className="text-slate-500 font-normal ml-1 text-xs">
-                      (+{formatWindSpeed(now.wind_gusts_10m - now.wind_speed_10m, units)})
-                    </span>
                   </p>
                 </div>
               </div>
@@ -421,9 +420,9 @@ export default function MarinePage() {
                         {getWindDirectionLabel(h.wind_direction_10m)}
                       </span>
                     </div>
-                    {h.wind_gusts_10m > h.wind_speed_10m * 1.2 && (
+                    {h.wind_gusts_10m > h.wind_speed_10m * 1.1 && (
                       <span className="text-xs text-amber-400 flex-shrink-0">
-                        raf. {formatWindSpeed(h.wind_gusts_10m, units)}
+                        {formatWindSpeed(h.wind_speed_10m, units)} → {formatWindSpeed(h.wind_gusts_10m, units)}
                       </span>
                     )}
                     {(pop > 0.05 || rainMm > 0) && (
@@ -622,10 +621,10 @@ export default function MarinePage() {
                         <span style={{ color: beaufortColor }}>Bf {beaufort} ({formatWindSpeed(now.wind_speed_10m, units)})</span>
                         {isSqually && <span className="text-amber-400 ml-1">— Rafales irrégulières ⚠️</span>}
                       </p>
-                      {now.wind_gusts_10m > 0 && (
+                      {now.wind_gusts_10m > now.wind_speed_10m * 1.05 && (
                         <p className="text-xs text-amber-400 mt-0.5">
-                          Rafales max : {formatWindSpeed(now.wind_gusts_10m, units)}{' '}
-                          ({gustRatio > 1 ? `×${gustRatio.toFixed(1)} vent moyen` : ''})
+                          Rafales : {formatWindSpeed(now.wind_speed_10m, units)} → {formatWindSpeed(now.wind_gusts_10m, units)}
+                          {gustRatio > 1 && <span className="text-slate-500 ml-1">(×{gustRatio.toFixed(1)})</span>}
                         </p>
                       )}
                       {/* Vagues depuis le modèle marine si disponible */}
@@ -688,9 +687,11 @@ export default function MarinePage() {
                           <span className="text-xs font-semibold" style={{ color: bfColor }}>
                             {formatWindSpeed(h.wind_speed_10m, units)}
                           </span>
-                          {/* Rafales */}
+                          {/* Rafales : vent constant → total rafale */}
                           <span className={`text-xs ${gustWarning ? 'text-amber-300 font-semibold' : 'text-slate-500'}`}>
-                            {h.wind_gusts_10m > 0 ? formatWindSpeed(h.wind_gusts_10m, units) : '—'}
+                            {h.wind_gusts_10m > h.wind_speed_10m * 1.05
+                              ? `${formatWindSpeed(h.wind_speed_10m, units)} → ${formatWindSpeed(h.wind_gusts_10m, units)}`
+                              : '—'}
                             {gustWarning && ' ⚠'}
                           </span>
                           {/* Beaufort */}
@@ -982,9 +983,9 @@ export default function MarinePage() {
                     {getWindDirectionLabel(now.wind_direction_10m)} · Bf {beaufort} — {getBeaufortLabel(beaufort)}
                   </span>
                 </div>
-                {now.wind_gusts_10m > 0 && (
+                {now.wind_gusts_10m > now.wind_speed_10m * 1.05 && (
                   <p className="text-sm text-amber-300 ml-8">
-                    Rafales jusqu'à {formatWindSpeed(now.wind_gusts_10m, units)}
+                    Rafales : {formatWindSpeed(now.wind_speed_10m, units)} → {formatWindSpeed(now.wind_gusts_10m, units)}
                   </p>
                 )}
                 {atmosWind && atmosWind.length >= 12 && (() => {
