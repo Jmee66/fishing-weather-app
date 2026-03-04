@@ -914,9 +914,9 @@ export default function MarinePage() {
           </Card>
 
           {/* Résumé texte auto-généré style VHF/radio maritime */}
-          {now && marine && (() => {
+          {now && marine && atmosWind && (() => {
             // Fusionner vent atmosWind + vagues marine pour le bulletin
-            const bulletinHourly = atmosWind!.map((w, i) => ({
+            const bulletinHourly = atmosWind.map((w, i) => ({
               ...w,
               wave_height: marine.hourly[i]?.wave_height ?? 0,
               wave_direction: marine.hourly[i]?.wave_direction ?? null,
@@ -970,9 +970,9 @@ export default function MarinePage() {
                     Rafales jusqu'à {formatWindSpeed(now.wind_gusts_10m, units)}
                   </p>
                 )}
-                {atmosWind!.length >= 12 && (() => {
-                  const h6  = atmosWind![6]
-                  const h12 = atmosWind![12]
+                {atmosWind && atmosWind.length >= 12 && (() => {
+                  const h6  = atmosWind[6]
+                  const h12 = atmosWind[12]
                   const bf6  = getBeaufortFromMs(h6.wind_speed_10m)
                   const bf12 = getBeaufortFromMs(h12.wind_speed_10m)
                   return (
@@ -1019,7 +1019,7 @@ export default function MarinePage() {
               <div>
                 <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1.5">Prévisions 24h</p>
                 <div className="space-y-1">
-                  {atmosWind!.slice(0, 24).filter((_, i) => i % 6 === 0).map((h, i) => {
+                  {(atmosWind ?? []).slice(0, 24).filter((_, i) => i % 6 === 0).map((h, i) => {
                     const bf = getBeaufortFromMs(h.wind_speed_10m)
                     const waveH = marine.hourly[i * 6]?.wave_height ?? 0
                     const waveDir = marine.hourly[i * 6]?.wave_direction ?? 0

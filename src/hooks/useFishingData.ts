@@ -9,11 +9,17 @@ export function useFishingData() {
 
   useEffect(() => {
     if (isLoaded) return
-    Promise.all([spotsStorage.getAll(), logStorage.getAll()]).then(([s, l]) => {
-      setSpots(s)
-      setLog(l)
-      setIsLoaded(true)
-    })
+    Promise.all([spotsStorage.getAll(), logStorage.getAll()])
+      .then(([s, l]) => {
+        setSpots(s)
+        setLog(l)
+        setIsLoaded(true)
+      })
+      .catch(() => {
+        setSpots([])
+        setLog([])
+        setIsLoaded(true)
+      })
   }, [isLoaded, setSpots, setLog, setIsLoaded])
 
   const saveSpot = async (spot: FishingSpot) => {

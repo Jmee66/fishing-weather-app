@@ -28,8 +28,9 @@ export default function LocationSearch() {
   }
 
   const selectResult = (r: GeocodingResult) => {
-    setSelectedLocation({ lat: r.lat, lon: r.lon, name: r.displayName.split(",").slice(0, 2).join(",") })
-    setQuery(r.displayName.split(",")[0])
+    const dn = r.displayName || `${r.lat.toFixed(3)}, ${r.lon.toFixed(3)}`
+    setSelectedLocation({ lat: r.lat, lon: r.lon, name: dn.split(",").slice(0, 2).join(",") })
+    setQuery(dn.split(",")[0])
     setIsOpen(false)
   }
 
@@ -54,8 +55,8 @@ export default function LocationSearch() {
               className="w-full text-left px-3 py-2.5 text-sm text-slate-200 hover:bg-[var(--bg-elevated)] border-b border-[var(--border-subtle)] last:border-0"
               onClick={() => selectResult(r)}
             >
-              <div className="font-medium truncate">{r.displayName.split(",")[0]}</div>
-              <div className="text-xs text-slate-500 truncate">{r.displayName.split(",").slice(1, 3).join(",")}</div>
+              <div className="font-medium truncate">{(r.displayName || '').split(",")[0]}</div>
+              <div className="text-xs text-slate-500 truncate">{(r.displayName ?? '').split(",").slice(1, 3).join(",")}</div>
             </button>
           ))}
         </div>

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { useGeolocation } from '@/hooks/useGeolocation'
 import { useLocationStore } from '@/stores/location.store'
@@ -58,7 +58,7 @@ export default function HomePage() {
   const [showFavModal, setShowFavModal] = useState(false)
   const [favName, setFavName]     = useState('')
   const [favCategory, setFavCategory] = useState<FavouriteLocation['category']>('autre')
-  const timerRef = { current: null as ReturnType<typeof setTimeout> | null }
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const activeCoords = selectedLocation ?? currentPosition
   const activeIsGPS  = !selectedLocation && !!currentPosition
@@ -80,7 +80,7 @@ export default function HomePage() {
   }
 
   const selectResult = (r: GeocodingResult) => {
-    const name = r.displayName.split(',').slice(0, 2).join(',').trim()
+    const name = (r.displayName || `${r.lat.toFixed(3)}, ${r.lon.toFixed(3)}`).split(',').slice(0, 2).join(',').trim()
     setSelectedLocation({ lat: r.lat, lon: r.lon, name })
     setQuery(name)
     setSearchOpen(false)
@@ -145,8 +145,8 @@ export default function HomePage() {
                     className="w-full text-left px-3 py-2.5 hover:bg-[var(--bg-overlay)] transition-colors border-b last:border-0"
                     style={{ borderColor: 'var(--border-subtle)' }}
                   >
-                    <div className="text-sm font-medium text-slate-100 truncate">{r.displayName.split(',')[0]}</div>
-                    <div className="text-xs text-slate-500 truncate">{r.displayName.split(',').slice(1, 3).join(',')}</div>
+                    <div className="text-sm font-medium text-slate-100 truncate">{(r.displayName || '').split(',')[0]}</div>
+                    <div className="text-xs text-slate-500 truncate">{(r.displayName ?? '').split(',').slice(1, 3).join(',')}</div>
                   </button>
                 ))}
               </div>

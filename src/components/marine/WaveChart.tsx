@@ -17,6 +17,7 @@ export default function WaveChart({ hourly }: WaveChartProps) {
   const data = useMemo(() => hourly.slice(0, 48), [hourly])
 
   const maxH = useMemo(() => {
+    if (data.length === 0) return 1
     const peak = Math.max(...data.map((d) => d.wave_height))
     return Math.max(Math.ceil(peak / 0.5) * 0.5, 1)
   }, [data])

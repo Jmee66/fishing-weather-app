@@ -115,11 +115,18 @@ export default function MapPage() {
   useEffect(() => {
     if (isLoaded) return
     const { setSpots, setLog, setIsLoaded } = useFishingStore.getState()
-    Promise.all([spotsStorage.getAll(), logStorage.getAll()]).then(([s, l]) => {
-      setSpots(s)
-      setLog(l)
-      setIsLoaded(true)
-    })
+    Promise.all([spotsStorage.getAll(), logStorage.getAll()])
+      .then(([s, l]) => {
+        setSpots(s)
+        setLog(l)
+        setIsLoaded(true)
+      })
+      .catch(() => {
+        // En cas d'erreur IndexedDB, on démarre avec des données vides
+        setSpots([])
+        setLog([])
+        setIsLoaded(true)
+      })
   }, [isLoaded])
 
   // Init map once

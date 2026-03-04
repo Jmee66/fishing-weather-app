@@ -15,7 +15,7 @@ export function useTides(coordsOverride?: Coordinates) {
   const harbour = coords ? shomService.getNearestHarbour(coords) : null
 
   return useQuery({
-    queryKey: ['tides', harbour?.code],
+    queryKey: ['tides', harbour?.code, coords?.lat, coords?.lon],
     queryFn: () => {
       if (!coords) throw new Error('Aucune position disponible')
       return shomService.getTides(coords)

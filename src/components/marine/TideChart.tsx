@@ -20,14 +20,14 @@ export default function TideChart({ tides }: TideChartProps) {
   const points = useMemo(() => {
     // ── 1. Prédictions SHOM minute-par-minute ────────────────────────────────
     if (predictions.length >= 4) {
-      // Fenêtre 48h centrée sur maintenant (-2h / +46h)
+      // Fenêtre 48h autour de maintenant
       const now  = Date.now() / 1000
-      const from = now - 2 * 3600
-      const to   = now + 46 * 3600
+      const from = now - 4 * 3600     // 4h avant maintenant
+      const to   = now + 44 * 3600    // 44h après maintenant
       const filtered = predictions.filter((p) => p.dt >= from && p.dt <= to)
       if (filtered.length >= 4) return filtered
-      // Fallback : toutes les prédictions dispo si le filtre échoue
-      return predictions
+      // Fallback : les 48 premières prédictions disponibles
+      return predictions.slice(0, 48)
     }
 
     // ── 2. Interpolation cosinus entre événements PM/BM ──────────────────────
