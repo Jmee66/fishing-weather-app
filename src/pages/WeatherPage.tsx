@@ -218,15 +218,25 @@ export default function WeatherPage() {
                         size={16}
                       />
                     )}
-                    <span className="text-xs text-slate-400">
+                    <span className="text-xs font-medium" style={{ color: getBeaufortColor(h.wind_speed) }}>
                       {formatWindSpeed(h.wind_speed, units)}
                     </span>
-                    {h.pop > 0.2 && (
-                      <span className="ml-1 text-xs text-blue-400">
-                        {Math.round(h.pop * 100)}%
+                    {h.wind_deg != null && (
+                      <span className="text-xs text-slate-500">
+                        {getWindDirectionLabel(h.wind_deg)}
+                      </span>
+                    )}
+                    {h.wind_gust != null && h.wind_gust > h.wind_speed * 1.1 && (
+                      <span className="text-xs text-amber-400 flex-shrink-0">
+                        raf.{formatWindSpeed(h.wind_gust, units)}
                       </span>
                     )}
                   </div>
+                  {h.pop > 0.2 && (
+                    <span className="text-xs text-blue-400 flex-shrink-0">
+                      {Math.round(h.pop * 100)}%
+                    </span>
+                  )}
                 </div>
               )
             })}

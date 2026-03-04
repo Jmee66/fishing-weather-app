@@ -205,15 +205,15 @@ function WindModelSelector({ value, onChange }: { value: WindModelId; onChange: 
   )
 }
 
-/** Zone bulletin — CROSS-MF */
+/** Zone bulletin — CROSS-MF avec position centrale de chaque zone */
 const MF_ZONES = [
-  { id: 'FQLR10', name: 'Manche Est / Pas-de-Calais' },
-  { id: 'FQLR20', name: 'Manche Centrale' },
-  { id: 'FQLR30', name: 'Manche Ouest / Iroise' },
-  { id: 'FQLR40', name: 'Atlantique Nord (Gascogne Nord)' },
-  { id: 'FQLR50', name: 'Atlantique Sud (Gascogne Sud)' },
-  { id: 'FQLR60', name: 'Méditerranée Ouest (Lion / Mistral)' },
-  { id: 'FQLR70', name: 'Méditerranée Est (Ligure / Corse)' },
+  { id: 'FQLR10', name: 'Manche Est / Pas-de-Calais',       lat: 51.0, lon:  1.5 },
+  { id: 'FQLR20', name: 'Manche Centrale',                   lat: 49.5, lon: -1.0 },
+  { id: 'FQLR30', name: 'Manche Ouest / Iroise',             lat: 48.2, lon: -5.0 },
+  { id: 'FQLR40', name: 'Atlantique Nord (Gascogne Nord)',    lat: 46.5, lon: -3.5 },
+  { id: 'FQLR50', name: 'Atlantique Sud (Gascogne Sud)',      lat: 44.0, lon: -2.5 },
+  { id: 'FQLR60', name: 'Méditerranée Ouest (Lion / Mistral)',lat: 42.5, lon:  4.0 },
+  { id: 'FQLR70', name: 'Méditerranée Est (Ligure / Corse)', lat: 43.5, lon:  8.0 },
 ]
 
 /** Génère un résumé texte VHF-style depuis les données open-meteo */
@@ -267,6 +267,7 @@ export default function MarinePage() {
   const selectedLon = useLocationStore((s) => s.selectedLocation?.lon)
   const currentLat  = useLocationStore((s) => s.currentPosition?.lat)
   const currentLon  = useLocationStore((s) => s.currentPosition?.lon)
+  const setSelectedLocation = useLocationStore((s) => s.setSelectedLocation)
   const lat = selectedLat ?? currentLat
   const lon = selectedLon ?? currentLon
   const coords = lat != null && lon != null ? { lat, lon } : null
@@ -878,13 +879,17 @@ export default function MarinePage() {
         <div className="space-y-3">
           {/* Sélecteur de zone */}
           <Card>
-            <p className="text-xs text-slate-500 mb-2">Zone maritime</p>
+            <p className="text-xs text-slate-500 mb-1">Zone maritime</p>
+            <p className="text-[10px] text-slate-600 mb-2">Sélectionner une zone centre les données sur cette zone</p>
             <div className="space-y-1.5">
               {MF_ZONES.map((z) => (
                 <button
                   key={z.id}
                   type="button"
-                  onClick={() => setBulletinZone(z.id)}
+                  onClick={() => {
+                    setBulletinZone(z.id)
+                    setSelectedLocation({ lat: z.lat, lon: z.lon, name: z.name })
+                  }}
                   className="w-full text-left px-3 py-2 rounded-xl border text-sm transition-colors"
                   style={{
                     backgroundColor: bulletinZone === z.id ? 'rgb(14 165 233 / 0.15)' : 'var(--bg-surface)',
@@ -893,6 +898,9 @@ export default function MarinePage() {
                   }}
                 >
                   <span className={bulletinZone === z.id ? 'font-semibold' : ''}>{z.name}</span>
+                  {bulletinZone === z.id && (
+                    <span className="ml-1 text-[10px] text-sky-500 font-normal">· données chargées</span>
+                  )}
                 </button>
               ))}
             </div>
