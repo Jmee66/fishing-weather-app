@@ -41,18 +41,24 @@ function getBeaufortColor(speed_ms: number): string {
   return '#dc2626'
 }
 
-const WMO_ICONS: Record<number, string> = {
-  0: '☀️', 1: '🌤️', 2: '⛅', 3: '☁️',
-  45: '🌫️', 48: '🌫️',
-  51: '🌦️', 53: '🌦️', 55: '🌦️',
-  61: '🌧️', 63: '🌧️', 65: '🌧️',
-  71: '🌨️', 73: '🌨️', 75: '🌨️',
-  80: '🌦️', 81: '🌧️', 82: '⛈️',
-  95: '⛈️', 96: '⛈️', 99: '⛈️',
-}
-
 function wmoIcon(code: number): string {
-  return WMO_ICONS[code] ?? '🌡️'
+  if (code === 0)               return '☀️'
+  if (code === 1)               return '🌤️'
+  if (code === 2)               return '⛅'
+  if (code === 3)               return '☁️'
+  if (code >= 45 && code <= 48) return '🌫️'
+  if (code >= 51 && code <= 57) return '🌦️'
+  if (code >= 61 && code <= 67) return '🌧️'
+  if (code >= 71 && code <= 77) return '🌨️'
+  if (code >= 80 && code <= 82) return '🌦️'
+  if (code >= 85 && code <= 86) return '🌨️'
+  if (code >= 95 && code <= 99) return '⛈️'
+  // Fallback par plage
+  if (code < 10)                return '🌤️'
+  if (code < 50)                return '⛅'
+  if (code < 70)                return '🌧️'
+  if (code < 80)                return '🌨️'
+  return '⛅'
 }
 
 export default function WeatherPage() {
@@ -139,7 +145,7 @@ export default function WeatherPage() {
                 </p>
               </div>
               <div className="text-6xl">
-                {weatherCondition ? wmoIcon(weatherCondition.id) : '🌡️'}
+                {wmoIcon(weatherCondition?.id ?? 800)}
               </div>
             </div>
           </Card>
@@ -205,7 +211,7 @@ export default function WeatherPage() {
                     {format(new Date(h.dt * 1000), 'HH:mm')}
                   </span>
                   <span className="text-xl w-8 flex-shrink-0">
-                    {cond ? wmoIcon(cond.id) : '🌡️'}
+                    {wmoIcon(cond?.id ?? 800)}
                   </span>
                   <span className="font-semibold text-slate-100 text-sm w-14 flex-shrink-0">
                     {formatTemperature(h.temp, units)}
@@ -232,10 +238,19 @@ export default function WeatherPage() {
                       </span>
                     )}
                   </div>
-                  {h.pop > 0.2 && (
-                    <span className="text-xs text-blue-400 flex-shrink-0">
-                      {Math.round(h.pop * 100)}%
-                    </span>
+                  {(h.pop > 0.05 || (h.rain?.['1h'] ?? 0) > 0) && (
+                    <div className="flex flex-col items-end flex-shrink-0">
+                      {h.pop > 0.05 && (
+                        <span className="text-xs text-blue-400">
+                          💧{Math.round(h.pop * 100)}%
+                        </span>
+                      )}
+                      {(h.rain?.['1h'] ?? 0) > 0 && (
+                        <span className="text-xs text-sky-300">
+                          {(h.rain!['1h']).toFixed(1)}mm
+                        </span>
+                      )}
+                    </div>
                   )}
                 </div>
               )
@@ -259,7 +274,7 @@ export default function WeatherPage() {
                       {format(new Date(d.dt * 1000), 'd MMM', { locale: fr })}
                     </p>
                   </div>
-                  <span className="text-xl">{cond ? wmoIcon(cond.id) : '🌡️'}</span>
+                  <span className="text-xl">{wmoIcon(cond?.id ?? 800)}</span>
                   <div className="flex-1 text-sm text-slate-300 text-right">
                     <span className="font-semibold text-slate-100">
                       {formatTemperature(d.temp.max, units)}
