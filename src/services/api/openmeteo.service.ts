@@ -188,11 +188,120 @@ export const MARINE_MODELS = [
 
 export type MarineModelId = typeof MARINE_MODELS[number]['id']
 
+// ── Modèles atmosphériques pour le vent (api.open-meteo.com) ─────────────────
+// AROME/AROME HD = Météo-France, très haute résolution locale (1.3-2.5 km)
+export const WIND_MODELS = [
+  {
+    id: 'arome_hd',
+    name: 'AROME HD',
+    desc: 'Météo-France — 1.3 km, meilleur à court terme pour la France',
+    stars: 5,
+    resolution: 1.3,
+    updateHz: 3,
+    note: 'Modèle de référence pour la météo côtière française',
+    available: 'france', // uniquement disponible sur la France
+  },
+  {
+    id: 'arome',
+    name: 'AROME',
+    desc: 'Météo-France — 2.5 km, haute résolution France',
+    stars: 5,
+    resolution: 2.5,
+    updateHz: 3,
+    note: 'Très précis à court terme (0-48h), France uniquement',
+    available: 'france',
+  },
+  {
+    id: 'arpege_world',
+    name: 'ARPEGE',
+    desc: 'Météo-France — 10 km, global',
+    stars: 4,
+    resolution: 10,
+    updateHz: 6,
+    note: 'Bon modèle global de Météo-France',
+    available: 'global',
+  },
+  {
+    id: 'ecmwf_ifs025',
+    name: 'ECMWF IFS',
+    desc: 'Centre européen — 25 km, référence mondiale',
+    stars: 5,
+    resolution: 25,
+    updateHz: 6,
+    note: 'Standard mondial, excellent au-delà de 48h',
+    available: 'global',
+  },
+  {
+    id: 'gfs025',
+    name: 'GFS',
+    desc: 'NOAA — 25 km, modèle américain global',
+    stars: 3,
+    resolution: 25,
+    updateHz: 6,
+    note: 'Bon global, moins précis localement',
+    available: 'global',
+  },
+  {
+    id: 'auto',
+    name: 'Auto',
+    desc: 'Meilleur modèle sélectionné automatiquement',
+    stars: 4,
+    resolution: 9,
+    updateHz: 6,
+    note: 'Open-Meteo sélectionne le meilleur modèle selon la zone',
+    available: 'global',
+  },
+] as const
+
+export type WindModelId = typeof WIND_MODELS[number]['id']
+
+// Interface pour les données vent horaires issues de l'API atmosphérique
+export interface HourlyWind {
+  dt: number              // timestamp unix
+  wind_speed_10m: number  // m/s
+  wind_direction_10m: number // degrés
+  wind_gusts_10m: number  // m/s
+}
+
+// Fetch vent horaire depuis l'API atmosphérique (AROME, ECMWF, GFS…)
+export async function fetchAtmosphericWind(
+  coords: Coordinates,
+  windModel: WindModelId = 'arome_hd'
+): Promise<HourlyWind[]> {
+  const { data } = await axios.get(`${OPENMETEO_BASE_URL}/forecast`, {
+    params: {
+      latitude: coords.lat,
+      longitude: coords.lon,
+      ...(windModel !== 'auto' ? { models: windModel } : {}),
+      hourly: ['wind_speed_10m', 'wind_direction_10m', 'wind_gusts_10m'].join(','),
+      wind_speed_unit: 'ms',  // m/s directement, pas de conversion nécessaire
+      timezone: 'auto',
+      forecast_days: 7,
+    },
+  })
+
+  return (data.hourly.time as string[]).map((t: string, i: number) => ({
+    dt: Math.floor(new Date(t).getTime() / 1000),
+    wind_speed_10m: data.hourly.wind_speed_10m?.[i] ?? 0,
+    wind_direction_10m: data.hourly.wind_direction_10m?.[i] ?? 0,
+    wind_gusts_10m: data.hourly.wind_gusts_10m?.[i] ?? 0,
+  }))
+}
+
+// Modèles qui exposent les champs vent via l'API marine Open-Meteo
+// mfcurrents et era5_ocean ne proposent pas wind_speed/gusts
+const MARINE_MODELS_WITH_WIND: ReadonlyArray<MarineModelId> = ['auto', 'mfwave', 'ecmwf_wam', 'gwam']
+
 // ── Fetch marine (modèle unique) ─────────────────────────────────────────────
 export async function fetchOpenMeteoMarine(
   coords: Coordinates,
   marineModel: MarineModelId = 'auto'
 ): Promise<MarineForecast> {
+  // Certains modèles (mfcurrents, era5_ocean) ne proposent pas les champs vent via l'API marine
+  const windFields = MARINE_MODELS_WITH_WIND.includes(marineModel)
+    ? ['wind_speed_10m', 'wind_direction_10m', 'wind_gusts_10m']
+    : []
+
   const { data } = await axios.get(`${OPENMETEO_MARINE_URL}/marine`, {
     params: {
       latitude: coords.lat,
@@ -202,7 +311,7 @@ export async function fetchOpenMeteoMarine(
         'wave_height', 'wave_direction', 'wave_period',
         'swell_wave_height', 'swell_wave_direction', 'swell_wave_period',
         'wind_wave_height', 'wind_wave_direction', 'wind_wave_period',
-        'wind_speed_10m', 'wind_direction_10m', 'wind_gusts_10m',
+        ...windFields,
       ].join(','),
       timezone: 'auto',
       forecast_days: 7,
@@ -291,11 +400,13 @@ export interface WindGridData {
 /**
  * Fetch une grille NxN de vent autour de coords et retourne le format leaflet-velocity.
  * On utilise l'API multi-points d'Open-Meteo (lat/lon séparés par virgules).
+ * windModel permet d'utiliser AROME/AROME HD pour la grille.
  */
 export async function fetchMarineWindGrid(
   coords: Coordinates,
   gridSize = 5,   // 5×5 = 25 points
-  span = 1.0      // ±0.5° autour du centre (span total = 1°)
+  span = 1.0,     // ±0.5° autour du centre (span total = 1°)
+  windModel: WindModelId = 'arome_hd'
 ): Promise<[WindGridData, WindGridData]> {
   const step = span / (gridSize - 1)
   const half = span / 2
@@ -324,7 +435,9 @@ export async function fetchMarineWindGrid(
     params: {
       latitude: allLats.join(','),
       longitude: allLons.join(','),
+      ...(windModel !== 'auto' ? { models: windModel } : {}),
       hourly: ['wind_speed_10m', 'wind_direction_10m'].join(','),
+      wind_speed_unit: 'ms',
       timezone: 'auto',
       forecast_days: 1,
     },
@@ -338,7 +451,7 @@ export async function fetchMarineWindGrid(
   const vData: number[] = []
 
   for (const resp of responses) {
-    const speed = (resp.hourly.wind_speed_10m?.[0] ?? 0) / 3.6 // km/h → m/s
+    const speed = resp.hourly.wind_speed_10m?.[0] ?? 0 // déjà en m/s (wind_speed_unit=ms)
     const dir   = resp.hourly.wind_direction_10m?.[0] ?? 0     // degrés
     const dirRad = (dir * Math.PI) / 180
     // Convention météo : dir = d'où vient le vent → vecteur de déplacement = opposé
@@ -368,6 +481,7 @@ export async function fetchMarineWindGrid(
 export const openMeteoService = {
   getWeather: fetchOpenMeteoWeather,
   getMarineForecast: fetchOpenMeteoMarine,
+  getAtmosphericWind: fetchAtmosphericWind,
   getMarineSnapshot: fetchMarineSnapshot,
   getWindGrid: fetchMarineWindGrid,
 }

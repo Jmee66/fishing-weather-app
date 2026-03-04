@@ -5,6 +5,7 @@ import Alert from '@/components/ui/Alert'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
 import { useMarineWeather } from '@/hooks/useMarineWeather'
+import { useAtmosphericWind } from '@/hooks/useAtmosphericWind'
 import { useMarineConsensus } from '@/hooks/useMarineConsensus'
 import { useWindGrid } from '@/hooks/useWindGrid'
 import { useTides } from '@/hooks/useTides'
@@ -14,8 +15,8 @@ import { getBeaufortFromMs, getBeaufortLabel, getBeaufortColor } from '@/utils/b
 import { getDouglasFromHeight, getDouglasLabel } from '@/utils/douglas'
 import { formatWindSpeed, getWindDirectionLabel } from '@/utils/units'
 import { useSettingsStore } from '@/stores/settings.store'
-import { MARINE_MODELS } from '@/services/api/openmeteo.service'
-import type { MarineModelId } from '@/services/api/openmeteo.service'
+import { MARINE_MODELS, WIND_MODELS } from '@/services/api/openmeteo.service'
+import type { MarineModelId, WindModelId } from '@/services/api/openmeteo.service'
 import type { UnitSystem } from '@/types'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
@@ -145,6 +146,65 @@ function ModelSelector({ value, onChange }: { value: MarineModelId; onChange: (v
   )
 }
 
+/** Sélecteur de modèle vent atmosphérique (AROME, ECMWF, GFS…) */
+function WindModelSelector({ value, onChange }: { value: WindModelId; onChange: (v: WindModelId) => void }) {
+  const selected = WIND_MODELS.find((m) => m.id === value)
+  return (
+    <div className="mb-3">
+      <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1.5">Modèle vent</p>
+      <div className="flex flex-wrap gap-1.5 mb-2">
+        {WIND_MODELS.map((m) => {
+          const isActive = value === m.id
+          return (
+            <button
+              key={m.id}
+              type="button"
+              onClick={() => onChange(m.id)}
+              title={`${m.desc}\nRésolution : ${m.resolution} km · Màj toutes les ${m.updateHz}h`}
+              className="px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors"
+              style={{
+                backgroundColor: isActive ? 'rgb(74 222 128 / 0.15)' : 'var(--bg-surface)',
+                borderColor:     isActive ? 'rgb(74 222 128 / 0.5)'  : 'var(--border-default)',
+                color:           isActive ? 'rgb(134 239 172)'       : 'var(--text-secondary)',
+              }}
+            >
+              <span>{m.name}</span>
+              <span className="ml-1.5 opacity-80">
+                <Stars count={m.stars} color={isActive ? '#86efac' : '#64748b'} />
+              </span>
+            </button>
+          )
+        })}
+      </div>
+      {selected && (
+        <div
+          className="flex items-center gap-3 px-3 py-2 rounded-xl text-[10px]"
+          style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}
+        >
+          <div className="flex-1">
+            <span className="text-slate-300 font-medium">{selected.name}</span>
+            <span className="text-slate-500 ml-1.5">{selected.note}</span>
+          </div>
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <div className="text-center">
+              <p className="text-[9px] text-slate-600 mb-0.5">Résol.</p>
+              <p className="text-slate-400">{selected.resolution} km</p>
+            </div>
+            <div className="text-center">
+              <p className="text-[9px] text-slate-600 mb-0.5">Màj</p>
+              <p className="text-slate-400">{selected.updateHz}h</p>
+            </div>
+            <div className="text-center">
+              <p className="text-[9px] text-slate-600 mb-0.5">Zone</p>
+              <p className="text-slate-400">{selected.available === 'france' ? '🇫🇷 FR' : '🌍 Global'}</p>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 /** Zone bulletin — CROSS-MF */
 const MF_ZONES = [
   { id: 'FQLR10', name: 'Manche Est / Pas-de-Calais' },
@@ -202,6 +262,7 @@ export default function MarinePage() {
   const [tab, setTab] = useState('vent')
   const [bulletinZone, setBulletinZone] = useState('FQLR30')
   const [marineModel, setMarineModel] = useState<MarineModelId>('auto')
+  const [windModel, setWindModel] = useState<WindModelId>('arome_hd')
   const selectedLat = useLocationStore((s) => s.selectedLocation?.lat)
   const selectedLon = useLocationStore((s) => s.selectedLocation?.lon)
   const currentLat  = useLocationStore((s) => s.currentPosition?.lat)
@@ -210,10 +271,15 @@ export default function MarinePage() {
   const lon = selectedLon ?? currentLon
   const coords = lat != null && lon != null ? { lat, lon } : null
   const { units } = useSettingsStore()
-  const { data: marine, isLoading, error } = useMarineWeather(coords ?? undefined, marineModel)
+  // Données vent : modèle atmosphérique (AROME, ECMWF…)
+  const { data: atmosWind, isLoading: atmosLoading, error: atmosError } = useAtmosphericWind(coords ?? undefined, windModel)
+  // Données vagues/houle : modèle marine (mfwave, ecmwf_wam…)
+  const { data: marine, isLoading: marineLoading, error: marineError } = useMarineWeather(coords ?? undefined, marineModel)
   const { data: tides, isLoading: tidesLoading } = useTides(coords ?? undefined)
   const { data: consensus, isLoading: consensusLoading } = useMarineConsensus(coords ?? undefined)
-  const { data: windGrid, isLoading: windGridLoading } = useWindGrid(coords ?? undefined)
+  const { data: windGrid, isLoading: windGridLoading } = useWindGrid(coords ?? undefined, windModel)
+  // État de chargement global pour les onglets vent/voile
+  const isLoading = atmosLoading
 
   const tabs = [
     { id: 'vent',    label: 'Vent' },
@@ -233,7 +299,10 @@ export default function MarinePage() {
     )
   }
 
-  const now = marine?.hourly?.[0]
+  // now = données vent atmosphériques (onglets Vent/Voile)
+  const now = atmosWind?.[0]
+  // nowMarine = données vagues (onglet Houle)
+  const nowMarine = marine?.hourly?.[0]
   const beaufort = now ? getBeaufortFromMs(now.wind_speed_10m) : 0
   const beaufortColor = getBeaufortColor(beaufort)
 
@@ -241,19 +310,39 @@ export default function MarinePage() {
     <div className="space-y-3 p-4">
       <Tabs tabs={tabs} activeTab={tab} onChange={setTab} />
 
-      {isLoading && tab !== 'tides' && tab !== 'bulletin' && (
+      {/* Spinners selon l'onglet actif */}
+      {tab === 'vent' && atmosLoading && (
         <div className="flex justify-center py-10"><Spinner size="lg" /></div>
       )}
-      {error && (
-        <Alert type="error" title="Erreur données marines">
-          Impossible de charger les données Open-Meteo.
+      {tab === 'voile' && atmosLoading && (
+        <div className="flex justify-center py-10"><Spinner size="lg" /></div>
+      )}
+      {tab === 'houle' && marineLoading && (
+        <div className="flex justify-center py-10"><Spinner size="lg" /></div>
+      )}
+
+      {/* Erreurs */}
+      {(tab === 'vent' || tab === 'voile') && atmosError && (
+        <Alert type="error" title="Erreur données vent">
+          {(() => {
+            const msg = String((atmosError as Error)?.message ?? '')
+            if (msg.includes('terrestre') || msg.includes('no data')) {
+              return 'Position terrestre : pas de données disponibles. Choisissez une position côtière ou en mer.'
+            }
+            return `Impossible de charger les données vent (${WIND_MODELS.find(m => m.id === windModel)?.name}). Vérifiez votre connexion.`
+          })()}
+        </Alert>
+      )}
+      {tab === 'houle' && marineError && (
+        <Alert type="error" title="Erreur données vagues">
+          Impossible de charger les données vagues Open-Meteo. La position est peut-être terrestre.
         </Alert>
       )}
 
       {/* ── VENT ── */}
-      {tab === 'vent' && now && marine && (
+      {tab === 'vent' && now && (
         <div className="space-y-3">
-          <ModelSelector value={marineModel} onChange={setMarineModel} />
+          <WindModelSelector value={windModel} onChange={setWindModel} />
 
           {/* Carte principale vent actuel */}
           <Card>
@@ -295,27 +384,18 @@ export default function MarinePage() {
               </div>
             )}
 
-            {now.wind_speed_80m != null && (
-              <div className="flex items-center gap-2 py-2 px-3 rounded-xl" style={{ backgroundColor: 'var(--bg-base)' }}>
-                <WindArrow deg={now.wind_direction_80m ?? now.wind_direction_10m} color="#64748b" size={20} />
-                <div>
-                  <p className="text-xs text-slate-500">Vent à 80 m (altitude)</p>
-                  <p className="font-medium text-slate-300 text-sm">
-                    {formatWindSpeed(now.wind_speed_80m, units)}
-                    {now.wind_direction_80m != null && ` · ${getWindDirectionLabel(now.wind_direction_80m)}`}
-                  </p>
-                </div>
-              </div>
-            )}
           </Card>
 
-          {/* Tableau prévisions vent 48h (toutes les 3h) */}
+          {/* Tableau prévisions vent 48h (toutes les 3h) — source atmosphérique (AROME…) */}
           <Card padding="none">
             <div className="px-4 py-3 border-b border-[var(--border-subtle)]">
               <h3 className="font-semibold text-slate-100 text-sm">Vent · Prévisions 48h</h3>
+              <p className="text-[10px] text-slate-500 mt-0.5">
+                Source : {WIND_MODELS.find(m => m.id === windModel)?.name} · {WIND_MODELS.find(m => m.id === windModel)?.resolution} km
+              </p>
             </div>
             <div className="divide-y divide-[var(--border-subtle)]">
-              {marine.hourly.slice(0, 48).filter((_, i) => i % 3 === 0).map((h) => {
+              {atmosWind.slice(0, 48).filter((_, i) => i % 3 === 0).map((h) => {
                 const bf = getBeaufortFromMs(h.wind_speed_10m)
                 const bfColor = getBeaufortColor(bf)
                 return (
@@ -351,10 +431,10 @@ export default function MarinePage() {
       {/* ── VOILE — Vent heure par heure pour navigation à voile ── */}
       {tab === 'voile' && (
         <div className="space-y-3">
-          <ModelSelector value={marineModel} onChange={setMarineModel} />
+          <WindModelSelector value={windModel} onChange={setWindModel} />
 
-          {!marine && !isLoading && (
-            <Alert type="info" title="Pas de données">Aucune donnée marine disponible pour cette position.</Alert>
+          {!atmosWind && !isLoading && (
+            <Alert type="info" title="Pas de données">Aucune donnée vent disponible pour cette position.</Alert>
           )}
 
           {/* ── Mini-carte particules de vent style Windy ── */}
@@ -501,7 +581,7 @@ export default function MarinePage() {
             )
           })()}
 
-          {marine && now && (() => {
+          {now && (() => {
             const gustRatio = now.wind_gusts_10m / Math.max(now.wind_speed_10m, 0.1)
             const isSqually = gustRatio > 1.5
             const safetyLevel = beaufort <= 3 ? 'Conditions favorables'
@@ -529,10 +609,11 @@ export default function MarinePage() {
                           ({gustRatio > 1 ? `×${gustRatio.toFixed(1)} vent moyen` : ''})
                         </p>
                       )}
-                      {now.wave_height > 0 && (
+                      {/* Vagues depuis le modèle marine si disponible */}
+                      {nowMarine && nowMarine.wave_height > 0 && (
                         <p className="text-xs text-sky-400 mt-0.5">
-                          Mer : {now.wave_height.toFixed(1)} m — {getDouglasLabel(getDouglasFromHeight(now.wave_height))}
-                          {now.wave_period != null && ` · période ${now.wave_period.toFixed(0)}s`}
+                          Mer : {nowMarine.wave_height.toFixed(1)} m — {getDouglasLabel(getDouglasFromHeight(nowMarine.wave_height))}
+                          {nowMarine.wave_period != null && ` · période ${nowMarine.wave_period.toFixed(0)}s`}
                         </p>
                       )}
                     </div>
@@ -543,11 +624,14 @@ export default function MarinePage() {
                   </div>
                 </Card>
 
-                {/* Tableau heure par heure — 24h */}
+                {/* Tableau heure par heure — 24h : vent AROME + vagues marine fusionnés */}
                 <Card padding="none">
                   <div className="px-4 py-3 border-b border-[var(--border-subtle)]">
                     <h3 className="font-semibold text-slate-100 text-sm">Vent heure par heure — 24h</h3>
-                    <p className="text-[10px] text-slate-500 mt-0.5">Pour navigation à voile en sécurité</p>
+                    <p className="text-[10px] text-slate-500 mt-0.5">
+                      Vent : {WIND_MODELS.find(m => m.id === windModel)?.name} {WIND_MODELS.find(m => m.id === windModel)?.resolution} km
+                      {marine && ' · Mer : MF/ECMWF'}
+                    </p>
                   </div>
                   {/* En-tête colonnes */}
                   <div className="grid grid-cols-[3rem_1.5rem_3.5rem_3.5rem_2.5rem_3rem] gap-1 px-3 py-1.5 border-b border-[var(--border-subtle)]">
@@ -559,12 +643,14 @@ export default function MarinePage() {
                     <span className="text-[9px] text-slate-600 uppercase">Mer</span>
                   </div>
                   <div className="divide-y divide-[var(--border-subtle)]">
-                    {marine.hourly.slice(0, 24).map((h, idx) => {
+                    {atmosWind.slice(0, 24).map((h, idx) => {
                       const bf = getBeaufortFromMs(h.wind_speed_10m)
                       const bfColor = getBeaufortColor(bf)
                       const gRatio = h.wind_gusts_10m / Math.max(h.wind_speed_10m, 0.1)
                       const gustWarning = gRatio > 1.8
-                      const dg = getDouglasFromHeight(h.wave_height)
+                      // Vagues depuis le modèle marine (index aligné par heure)
+                      const waveH = marine?.hourly?.[idx]?.wave_height ?? 0
+                      const dg = getDouglasFromHeight(waveH)
                       const waveColor = dg <= 1 ? '#4ade80' : dg <= 2 ? '#86efac' : dg <= 3 ? '#fbbf24' : dg <= 4 ? '#f97316' : '#ef4444'
                       const isNow = idx === 0
                       return (
@@ -592,9 +678,9 @@ export default function MarinePage() {
                           <span className="text-xs font-bold" style={{ color: bfColor }}>
                             {bf}
                           </span>
-                          {/* Mer */}
+                          {/* Mer (marine model) */}
                           <span className="text-xs" style={{ color: waveColor }}>
-                            {h.wave_height.toFixed(1)}m
+                            {waveH > 0 ? `${waveH.toFixed(1)}m` : '—'}
                           </span>
                         </div>
                       )
@@ -687,7 +773,7 @@ export default function MarinePage() {
       )}
 
       {/* ── HOULE ── */}
-      {tab === 'houle' && now && marine && (
+      {tab === 'houle' && nowMarine && marine && (
         <div className="space-y-3">
           <ModelSelector value={marineModel} onChange={setMarineModel} />
 
@@ -695,13 +781,13 @@ export default function MarinePage() {
           <Card>
             <p className="text-xs text-slate-500 mb-3">État de la mer actuel</p>
             <div className="flex items-center gap-4 mb-4">
-              <SwellArrow deg={now.wave_direction ?? 0} size={42} />
+              <SwellArrow deg={nowMarine.wave_direction ?? 0} size={42} />
               <div>
                 <p className="text-3xl font-bold text-sky-300">
-                  {now.wave_height.toFixed(1)} m
+                  {nowMarine.wave_height.toFixed(1)} m
                 </p>
                 <p className="text-sm text-slate-400">
-                  {getDouglasLabel(getDouglasFromHeight(now.wave_height))} · {getDouglasFromHeight(now.wave_height)}/9
+                  {getDouglasLabel(getDouglasFromHeight(nowMarine.wave_height))} · {getDouglasFromHeight(nowMarine.wave_height)}/9
                 </p>
               </div>
             </div>
@@ -710,37 +796,37 @@ export default function MarinePage() {
               <div className="rounded-xl p-2.5" style={{ backgroundColor: 'var(--bg-base)' }}>
                 <p className="text-[10px] text-slate-500 mb-0.5">Période</p>
                 <p className="font-semibold text-slate-100 text-sm">
-                  {now.wave_period?.toFixed(0) ?? '—'} s
+                  {nowMarine.wave_period?.toFixed(0) ?? '—'} s
                 </p>
               </div>
               <div className="rounded-xl p-2.5" style={{ backgroundColor: 'var(--bg-base)' }}>
                 <p className="text-[10px] text-slate-500 mb-0.5">Direction</p>
                 <div className="flex items-center gap-1.5">
-                  <SwellArrow deg={now.wave_direction ?? 0} size={16} />
+                  <SwellArrow deg={nowMarine.wave_direction ?? 0} size={16} />
                   <p className="font-semibold text-slate-100 text-sm">
-                    {now.wave_direction != null ? `${getWindDirectionLabel(now.wave_direction)} ${now.wave_direction.toFixed(0)}°` : '—'}
+                    {nowMarine.wave_direction != null ? `${getWindDirectionLabel(nowMarine.wave_direction)} ${nowMarine.wave_direction.toFixed(0)}°` : '—'}
                   </p>
                 </div>
               </div>
 
-              {now.swell_wave_height != null && (
+              {nowMarine.swell_wave_height != null && (
                 <>
                   <div className="rounded-xl p-2.5" style={{ backgroundColor: 'var(--bg-base)' }}>
                     <p className="text-[10px] text-slate-500 mb-0.5">Houle primaire</p>
                     <p className="font-semibold text-sky-400 text-sm">
-                      {now.swell_wave_height.toFixed(1)} m
+                      {nowMarine.swell_wave_height.toFixed(1)} m
                     </p>
                     <p className="text-[10px] text-slate-600">
-                      {now.swell_wave_period?.toFixed(0) ?? '—'}s · {now.swell_wave_direction != null ? getWindDirectionLabel(now.swell_wave_direction) : '—'}
+                      {nowMarine.swell_wave_period?.toFixed(0) ?? '—'}s · {nowMarine.swell_wave_direction != null ? getWindDirectionLabel(nowMarine.swell_wave_direction) : '—'}
                     </p>
                   </div>
                   <div className="rounded-xl p-2.5" style={{ backgroundColor: 'var(--bg-base)' }}>
                     <p className="text-[10px] text-slate-500 mb-0.5">Mer du vent</p>
                     <p className="font-semibold text-teal-400 text-sm">
-                      {now.wind_wave_height?.toFixed(1) ?? '—'} m
+                      {nowMarine.wind_wave_height?.toFixed(1) ?? '—'} m
                     </p>
                     <p className="text-[10px] text-slate-600">
-                      {now.wind_wave_period?.toFixed(0) ?? '—'}s · {now.wind_wave_direction != null ? getWindDirectionLabel(now.wind_wave_direction) : '—'}
+                      {nowMarine.wind_wave_period?.toFixed(0) ?? '—'}s · {nowMarine.wind_wave_direction != null ? getWindDirectionLabel(nowMarine.wind_wave_direction) : '—'}
                     </p>
                   </div>
                 </>
@@ -814,7 +900,17 @@ export default function MarinePage() {
 
           {/* Résumé texte auto-généré style VHF/radio maritime */}
           {now && marine && (() => {
-            const bulletinText = generateBulletinText(marine.hourly, units)
+            // Fusionner vent atmosWind + vagues marine pour le bulletin
+            const bulletinHourly = atmosWind!.map((w, i) => ({
+              ...w,
+              wave_height: marine.hourly[i]?.wave_height ?? 0,
+              wave_direction: marine.hourly[i]?.wave_direction ?? null,
+              wave_period: marine.hourly[i]?.wave_period ?? null,
+              swell_wave_height: marine.hourly[i]?.swell_wave_height ?? null,
+              swell_wave_period: marine.hourly[i]?.swell_wave_period ?? null,
+              swell_wave_direction: marine.hourly[i]?.swell_wave_direction ?? null,
+            }))
+            const bulletinText = generateBulletinText(bulletinHourly, units)
             return (
               <Card>
                 <div className="flex items-center gap-2 mb-3">
@@ -828,22 +924,23 @@ export default function MarinePage() {
                   {bulletinText}
                 </div>
                 <p className="text-[10px] text-slate-600 mt-2">
-                  Généré depuis données Open-Meteo Marine · {format(new Date((now.dt ?? Date.now() / 1000) * 1000), "d MMM à HH:mm", { locale: fr })}
+                  Vent : {WIND_MODELS.find(m => m.id === windModel)?.name} · Vagues : {MARINE_MODELS.find(m => m.id === marineModel)?.name}
+                  {' · '}{format(new Date(now.dt * 1000), "d MMM à HH:mm", { locale: fr })}
                 </p>
               </Card>
             )
           })()}
 
-          {/* Synthèse étendue depuis les données open-meteo */}
-          {now && marine && (
+          {/* Synthèse étendue */}
+          {now && marine && nowMarine && (
             <Card>
               <p className="text-xs text-slate-500 mb-3">
                 Synthèse conditions actuelles — {MF_ZONES.find(z => z.id === bulletinZone)?.name}
               </p>
 
-              {/* Vent */}
+              {/* Vent (source atmosphérique AROME…) */}
               <div className="mb-3 pb-3 border-b border-[var(--border-subtle)]">
-                <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1.5">Vent</p>
+                <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1.5">Vent — {WIND_MODELS.find(m => m.id === windModel)?.name}</p>
                 <div className="flex items-center gap-2 mb-1">
                   <WindArrow deg={now.wind_direction_10m} color={beaufortColor} size={22} />
                   <span className="text-lg font-bold" style={{ color: beaufortColor }}>
@@ -858,9 +955,9 @@ export default function MarinePage() {
                     Rafales jusqu'à {formatWindSpeed(now.wind_gusts_10m, units)}
                   </p>
                 )}
-                {marine.hourly.length >= 12 && (() => {
-                  const h6  = marine.hourly[6]
-                  const h12 = marine.hourly[12]
+                {atmosWind!.length >= 12 && (() => {
+                  const h6  = atmosWind![6]
+                  const h12 = atmosWind![12]
                   const bf6  = getBeaufortFromMs(h6.wind_speed_10m)
                   const bf12 = getBeaufortFromMs(h12.wind_speed_10m)
                   return (
@@ -872,23 +969,23 @@ export default function MarinePage() {
                 })()}
               </div>
 
-              {/* État de la mer */}
+              {/* État de la mer (source marine) */}
               <div className="mb-3 pb-3 border-b border-[var(--border-subtle)]">
-                <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1.5">État de la mer</p>
+                <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1.5">État de la mer — {MARINE_MODELS.find(m => m.id === marineModel)?.name}</p>
                 <div className="flex items-center gap-2 mb-1">
-                  <SwellArrow deg={now.wave_direction ?? 0} size={20} />
-                  <span className="text-lg font-bold text-sky-300">{now.wave_height.toFixed(1)} m</span>
+                  <SwellArrow deg={nowMarine.wave_direction ?? 0} size={20} />
+                  <span className="text-lg font-bold text-sky-300">{nowMarine.wave_height.toFixed(1)} m</span>
                   <span className="text-sm text-slate-300">
-                    {getDouglasLabel(getDouglasFromHeight(now.wave_height))}
-                    {now.wave_period != null && ` · ${now.wave_period.toFixed(0)}s`}
-                    {now.wave_direction != null && ` · ${getWindDirectionLabel(now.wave_direction)}`}
+                    {getDouglasLabel(getDouglasFromHeight(nowMarine.wave_height))}
+                    {nowMarine.wave_period != null && ` · ${nowMarine.wave_period.toFixed(0)}s`}
+                    {nowMarine.wave_direction != null && ` · ${getWindDirectionLabel(nowMarine.wave_direction)}`}
                   </span>
                 </div>
-                {now.swell_wave_height != null && (
+                {nowMarine.swell_wave_height != null && (
                   <p className="text-sm text-sky-400 ml-8">
-                    Houle primaire {now.swell_wave_height.toFixed(1)} m
-                    {now.swell_wave_period != null && ` / ${now.swell_wave_period.toFixed(0)}s`}
-                    {now.swell_wave_direction != null && ` · ${getWindDirectionLabel(now.swell_wave_direction)}`}
+                    Houle primaire {nowMarine.swell_wave_height.toFixed(1)} m
+                    {nowMarine.swell_wave_period != null && ` / ${nowMarine.swell_wave_period.toFixed(0)}s`}
+                    {nowMarine.swell_wave_direction != null && ` · ${getWindDirectionLabel(nowMarine.swell_wave_direction)}`}
                   </p>
                 )}
                 {marine.hourly.length >= 12 && (() => {
@@ -903,13 +1000,14 @@ export default function MarinePage() {
                 })()}
               </div>
 
-              {/* Prévisions 24h résumées */}
+              {/* Prévisions 24h résumées (vent AROME + vagues marine) */}
               <div>
                 <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1.5">Prévisions 24h</p>
                 <div className="space-y-1">
-                  {marine.hourly.slice(0, 24).filter((_, i) => i % 6 === 0).map((h, i) => {
+                  {atmosWind!.slice(0, 24).filter((_, i) => i % 6 === 0).map((h, i) => {
                     const bf = getBeaufortFromMs(h.wind_speed_10m)
-                    const dt = new Date(Date.now() + i * 6 * 3600 * 1000)
+                    const waveH = marine.hourly[i * 6]?.wave_height ?? 0
+                    const waveDir = marine.hourly[i * 6]?.wave_direction ?? 0
                     return (
                       <div key={i} className="flex items-center gap-2 py-1 text-xs">
                         <span className="text-slate-500 w-12 flex-shrink-0">
@@ -919,11 +1017,8 @@ export default function MarinePage() {
                         <span style={{ color: getBeaufortColor(bf) }} className="w-20 flex-shrink-0">
                           Bf {bf} {formatWindSpeed(h.wind_speed_10m, units)}
                         </span>
-                        <SwellArrow deg={h.wave_direction ?? 0} size={13} />
-                        <span className="text-sky-400">{h.wave_height.toFixed(1)} m</span>
-                        <span className="text-slate-600 ml-auto hidden">
-                          {format(dt, 'HH:mm')}
-                        </span>
+                        <SwellArrow deg={waveDir} size={13} />
+                        <span className="text-sky-400">{waveH > 0 ? `${waveH.toFixed(1)} m` : '—'}</span>
                       </div>
                     )
                   })}
