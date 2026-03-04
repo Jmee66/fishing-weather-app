@@ -9,6 +9,7 @@ import { useAtmosphericWind } from '@/hooks/useAtmosphericWind'
 import { useMarineConsensus } from '@/hooks/useMarineConsensus'
 import { useWindGrid } from '@/hooks/useWindGrid'
 import { useTides } from '@/hooks/useTides'
+import { useWeather } from '@/hooks/useWeather'
 import WindParticleMap from '@/components/marine/WindParticleMap'
 import WaveChart from '@/components/marine/WaveChart'
 import { useLocationStore } from '@/stores/location.store'
@@ -280,6 +281,8 @@ export default function MarinePage() {
   const { data: tides, isLoading: tidesLoading } = useTides(coords ?? undefined)
   const { data: consensus, isLoading: consensusLoading } = useMarineConsensus(coords ?? undefined)
   const { data: windGrid, isLoading: windGridLoading } = useWindGrid(coords ?? undefined, windModel)
+  // Données météo (précipitations) pour l'onglet Vent
+  const { data: weatherData } = useWeather(coords ?? undefined)
   // État de chargement global pour les onglets vent/voile
   const isLoading = atmosLoading
 
@@ -400,8 +403,12 @@ export default function MarinePage() {
               {atmosWind.slice(0, 48).filter((_, i) => i % 3 === 0).map((h) => {
                 const bf = getBeaufortFromMs(h.wind_speed_10m)
                 const bfColor = getBeaufortColor(bf)
+                // Trouver l'heure correspondante dans les données météo (précipitations)
+                const rainH = weatherData?.hourly?.find((wh) => Math.abs(wh.dt - h.dt) < 1800)
+                const pop = rainH?.pop ?? 0
+                const rainMm = rainH?.rain?.['1h'] ?? 0
                 return (
-                  <div key={h.dt} className="flex items-center px-4 py-2.5 gap-3">
+                  <div key={h.dt} className="flex items-center px-4 py-2.5 gap-2">
                     <span className="text-slate-500 text-xs w-12 flex-shrink-0">
                       {format(new Date(h.dt * 1000), 'EEE HH', { locale: fr })}h
                     </span>
@@ -418,6 +425,16 @@ export default function MarinePage() {
                       <span className="text-xs text-amber-400 flex-shrink-0">
                         raf. {formatWindSpeed(h.wind_gusts_10m, units)}
                       </span>
+                    )}
+                    {(pop > 0.05 || rainMm > 0) && (
+                      <div className="flex flex-col items-end flex-shrink-0">
+                        {pop > 0.05 && (
+                          <span className="text-xs text-blue-400">💧{Math.round(pop * 100)}%</span>
+                        )}
+                        {rainMm > 0 && (
+                          <span className="text-xs text-sky-300">{rainMm.toFixed(1)}mm</span>
+                        )}
+                      </div>
                     )}
                     <span className="text-xs font-medium flex-shrink-0" style={{ color: bfColor }}>
                       Bf{bf}

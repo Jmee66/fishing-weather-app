@@ -7,6 +7,7 @@ import Spinner from '@/components/ui/Spinner'
 import { useFishingData } from '@/hooks/useFishingData'
 import { useLocationStore } from '@/stores/location.store'
 import { useFishActivity } from '@/hooks/useFishActivity'
+import { useWeather } from '@/hooks/useWeather'
 import { SPECIES_REGULATIONS } from '@/constants/fishing.constants'
 import SpotForm from '@/components/fishing/SpotForm'
 import LogEntryForm from '@/components/fishing/LogEntryForm'
@@ -61,6 +62,7 @@ export default function FishingPage() {
 
   const { spots, log, isLoaded, saveSpot, removeSpot, saveLogEntry, removeLogEntry } = useFishingData()
   const fishActivity = useFishActivity()
+  const { data: weatherData } = useWeather(coords ?? undefined)
 
   const tabs = [
     { id: 'spots', label: 'Spots' },
@@ -235,47 +237,86 @@ export default function FishingPage() {
               </p>
             </Card>
           ) : (
-            <Card>
-              <p className="text-xs text-slate-500 mb-2">Indice d'activité pêche</p>
-              {fishActivity ? (
-                <>
-                  <div className="flex items-end gap-3 mb-3">
-                    <p className="text-5xl font-bold text-slate-100">{fishActivity.total.toFixed(1)}</p>
-                    <p className="text-xl font-semibold text-slate-500 mb-1">/ 10</p>
-                    <Badge
-                      color={
-                        fishActivity.label === 'excellent' ? 'green' :
-                        fishActivity.label === 'good' ? 'teal' :
-                        fishActivity.label === 'average' ? 'amber' : 'red'
-                      }
-                      className="mb-1"
-                    >
-                      {fishActivity.label}
-                    </Badge>
+            <>
+              <Card>
+                <p className="text-xs text-slate-500 mb-2">Indice d'activité pêche</p>
+                {fishActivity ? (
+                  <>
+                    <div className="flex items-end gap-3 mb-3">
+                      <p className="text-5xl font-bold text-slate-100">{fishActivity.total.toFixed(1)}</p>
+                      <p className="text-xl font-semibold text-slate-500 mb-1">/ 10</p>
+                      <Badge
+                        color={
+                          fishActivity.label === 'excellent' ? 'green' :
+                          fishActivity.label === 'good' ? 'teal' :
+                          fishActivity.label === 'average' ? 'amber' : 'red'
+                        }
+                        className="mb-1"
+                      >
+                        {fishActivity.label}
+                      </Badge>
+                    </div>
+                    <div className="w-full bg-[var(--bg-elevated)] rounded-full h-2 mb-3">
+                      <div
+                        className={`h-2 rounded-full transition-all ${
+                          fishActivity.total >= 7 ? 'bg-green-500' :
+                          fishActivity.total >= 4 ? 'bg-amber-500' : 'bg-red-400'
+                        }`}
+                        style={{ width: `${fishActivity.total * 10}%` }}
+                      />
+                    </div>
+                    <ul className="text-xs text-slate-500 space-y-1">
+                      {Object.entries(fishActivity.factors).map(([key, score]) => (
+                        <li key={key} className="flex items-center gap-1">
+                          <span>{score >= 6 ? '✅' : score >= 3 ? '⚠️' : '❌'}</span>
+                          <span>{ACTIVITY_FACTOR_LABELS[key] ?? key} : {score.toFixed(1)}/10</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="text-xs text-slate-500 mt-2">{fishActivity.recommendation}</p>
+                  </>
+                ) : (
+                  <Spinner />
+                )}
+              </Card>
+
+              {/* Précipitations heure par heure (12h) */}
+              {weatherData?.hourly && weatherData.hourly.slice(0, 12).some((h) => (h.pop ?? 0) > 0.05 || (h.rain?.['1h'] ?? 0) > 0) && (
+                <Card padding="none">
+                  <div className="px-4 py-3 border-b border-[var(--border-subtle)]">
+                    <h3 className="font-semibold text-slate-100 text-sm">💧 Précipitations · 12 prochaines heures</h3>
                   </div>
-                  <div className="w-full bg-[var(--bg-elevated)] rounded-full h-2 mb-3">
-                    <div
-                      className={`h-2 rounded-full transition-all ${
-                        fishActivity.total >= 7 ? 'bg-green-500' :
-                        fishActivity.total >= 4 ? 'bg-amber-500' : 'bg-red-400'
-                      }`}
-                      style={{ width: `${fishActivity.total * 10}%` }}
-                    />
+                  <div className="divide-y divide-[var(--border-subtle)]">
+                    {weatherData.hourly.slice(0, 12).map((h) => {
+                      const pop = h.pop ?? 0
+                      const rainMm = h.rain?.['1h'] ?? 0
+                      if (pop <= 0.05 && rainMm === 0) return null
+                      return (
+                        <div key={h.dt} className="flex items-center px-4 py-2 gap-3">
+                          <span className="text-slate-500 text-xs w-12 flex-shrink-0">
+                            {format(new Date(h.dt * 1000), 'HH:mm')}
+                          </span>
+                          <div className="flex-1 flex items-center gap-2">
+                            <div className="flex-1 bg-[var(--bg-elevated)] rounded-full h-1.5 overflow-hidden">
+                              <div
+                                className="h-full rounded-full bg-blue-500 transition-all"
+                                style={{ width: `${Math.round(pop * 100)}%` }}
+                              />
+                            </div>
+                            <span className="text-xs text-blue-400 w-10 text-right">{Math.round(pop * 100)}%</span>
+                          </div>
+                          {rainMm > 0 && (
+                            <span className="text-xs text-sky-300 font-medium flex-shrink-0 w-14 text-right">
+                              {rainMm.toFixed(1)} mm
+                            </span>
+                          )}
+                        </div>
+                      )
+                    })}
                   </div>
-                  <ul className="text-xs text-slate-500 space-y-1">
-                    {Object.entries(fishActivity.factors).map(([key, score]) => (
-                      <li key={key} className="flex items-center gap-1">
-                        <span>{score >= 6 ? '✅' : score >= 3 ? '⚠️' : '❌'}</span>
-                        <span>{ACTIVITY_FACTOR_LABELS[key] ?? key} : {score.toFixed(1)}/10</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <p className="text-xs text-slate-500 mt-2">{fishActivity.recommendation}</p>
-                </>
-              ) : (
-                <Spinner />
+                </Card>
               )}
-            </Card>
+            </>
           )}
         </div>
       )}
