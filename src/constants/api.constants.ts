@@ -14,7 +14,7 @@ export const SHOM_WMTS_URL = 'https://services.data.shom.fr/INSPIRE/wmts'
 
 export const COPERNICUS_URL = 'https://my.cmems-du.eu/motu-web/Motu'
 
-export const VIGICRUES_BASE_URL = 'https://hubeau.eaufrance.fr/api/v1'
+export const VIGICRUES_BASE_URL = 'https://hubeau.eaufrance.fr/api/v2'
 export const VIGICRUES_SITES_URL = `${VIGICRUES_BASE_URL}/hydrometrie/referentiel/sites`
 export const VIGICRUES_OBS_URL = `${VIGICRUES_BASE_URL}/hydrometrie/observations_tr`
 

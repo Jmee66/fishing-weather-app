@@ -45,7 +45,11 @@ function createPositionIcon() {
   })
 }
 
-function renderSpotsOnLayer(layer: L.LayerGroup, spots: FishingSpot[]) {
+function renderSpotsOnLayer(
+  layer: L.LayerGroup,
+  spots: FishingSpot[],
+  onEdit: (spot: FishingSpot) => void,
+) {
   layer.clearLayers()
   spots.forEach((spot) => {
     const speciesHtml = spot.species.length > 0
@@ -54,7 +58,7 @@ function renderSpotsOnLayer(layer: L.LayerGroup, spots: FishingSpot[]) {
     const ratingHtml = spot.rating
       ? `<div style="font-size:11px;margin-top:2px">${'⭐'.repeat(spot.rating)}</div>`
       : ''
-    L.marker([spot.coordinates.lat, spot.coordinates.lon], { icon: createSpotIcon() })
+    const marker = L.marker([spot.coordinates.lat, spot.coordinates.lon], { icon: createSpotIcon() })
       .bindPopup(`
         <div style="min-width:140px">
           <div style="font-weight:600;font-size:13px;margin-bottom:2px">${spot.name}</div>
@@ -62,9 +66,23 @@ function renderSpotsOnLayer(layer: L.LayerGroup, spots: FishingSpot[]) {
           ${ratingHtml}${speciesHtml}
           ${spot.description ? `<div style="font-size:11px;margin-top:4px;color:#94a3b8">${spot.description}</div>` : ''}
           <div style="font-size:10px;margin-top:4px;color:#64748b;font-family:monospace">${spot.coordinates.lat.toFixed(4)}°N, ${spot.coordinates.lon.toFixed(4)}°E</div>
+          <button data-spot-id="${spot.id}" style="margin-top:8px;width:100%;padding:4px 8px;border-radius:6px;border:1px solid rgba(56,189,248,0.4);background:rgba(14,165,233,0.15);color:rgb(125,211,252);font-size:11px;cursor:pointer">✏️ Modifier</button>
         </div>
       `)
       .addTo(layer)
+
+    marker.on('popupopen', () => {
+      const popup = marker.getPopup()
+      if (!popup) return
+      const el = popup.getElement()?.querySelector(`[data-spot-id="${spot.id}"]`)
+      if (el) {
+        el.addEventListener('click', (e) => {
+          e.stopPropagation()
+          marker.closePopup()
+          onEdit(spot)
+        })
+      }
+    })
   })
 }
 
@@ -78,6 +96,7 @@ export default function MapPage() {
 
   const [showSpotForm, setShowSpotForm] = useState(false)
   const [longpressCoords, setLongpressCoords] = useState<{ lat: number; lon: number } | undefined>()
+  const [editingSpot, setEditingSpot] = useState<FishingSpot | undefined>()
 
   const selectedLat = useLocationStore((s) => s.selectedLocation?.lat)
   const selectedLon = useLocationStore((s) => s.selectedLocation?.lon)
@@ -201,7 +220,10 @@ export default function MapPage() {
     const key = spots.map((s) => `${s.id}:${s.updatedAt}`).join('|')
     if (key === lastSpotsKey.current) return
     lastSpotsKey.current = key
-    renderSpotsOnLayer(layer, spots)
+    renderSpotsOnLayer(layer, spots, (spot) => {
+      setEditingSpot(spot)
+      setShowSpotForm(true)
+    })
   }, [spots])
 
   const handleSaveSpot = async (spot: FishingSpot) => {
@@ -211,6 +233,7 @@ export default function MapPage() {
     else addSpot(spot)
     setShowSpotForm(false)
     setLongpressCoords(undefined)
+    setEditingSpot(undefined)
   }
 
   return (
@@ -242,9 +265,10 @@ export default function MapPage() {
       {/* SpotForm modal */}
       {showSpotForm && (
         <SpotForm
-          initialCoords={longpressCoords ?? coords ?? undefined}
+          spotToEdit={editingSpot}
+          initialCoords={editingSpot ? undefined : (longpressCoords ?? coords ?? undefined)}
           onSave={handleSaveSpot}
-          onClose={() => { setShowSpotForm(false); setLongpressCoords(undefined) }}
+          onClose={() => { setShowSpotForm(false); setLongpressCoords(undefined); setEditingSpot(undefined) }}
         />
       )}
     </div>
