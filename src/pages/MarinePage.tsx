@@ -262,9 +262,6 @@ function generateBulletinText(
 
 export default function MarinePage() {
   const [tab, setTab] = useState('vent')
-  const [bulletinZone, setBulletinZone] = useState('FQLR30')
-  const [marineModel, setMarineModel] = useState<MarineModelId>('auto')
-  const [windModel, setWindModel] = useState<WindModelId>('arome_france_hd')
   const selectedLat = useLocationStore((s) => s.selectedLocation?.lat)
   const selectedLon = useLocationStore((s) => s.selectedLocation?.lon)
   const currentLat  = useLocationStore((s) => s.currentPosition?.lat)
@@ -273,7 +270,8 @@ export default function MarinePage() {
   const lat = selectedLat ?? currentLat
   const lon = selectedLon ?? currentLon
   const coords = lat != null && lon != null ? { lat, lon } : null
-  const { units } = useSettingsStore()
+  // Préférences marine persistées dans le store (survivent au rechargement)
+  const { units, marineModel, windModel, bulletinZone, setMarineModel, setWindModel, setBulletinZone } = useSettingsStore()
   // Données vent : modèle atmosphérique (AROME, ECMWF…)
   const { data: atmosWind, isLoading: atmosLoading, error: atmosError } = useAtmosphericWind(coords ?? undefined, windModel)
   // Données vagues/houle : modèle marine (mfwave, ecmwf_wam…)

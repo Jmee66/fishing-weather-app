@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import type { WeatherSource, WeatherModel, UnitSystem, MapTileSource, ApiKeys, MapLayerId } from '@/types'
+import type { MarineModelId, WindModelId } from '@/services/api/openmeteo.service'
 
 interface SettingsState {
   weatherSource: WeatherSource
@@ -11,6 +12,10 @@ interface SettingsState {
   defaultLocation: { lat: number; lon: number; name: string } | null
   apiKeys: ApiKeys
   language: 'fr' | 'en'
+  // Préférences Marine
+  marineModel: MarineModelId
+  windModel: WindModelId
+  bulletinZone: string
   setWeatherSource: (source: WeatherSource) => void
   setWeatherModel: (model: WeatherModel) => void
   setUnits: (units: UnitSystem) => void
@@ -18,6 +23,9 @@ interface SettingsState {
   toggleLayer: (layerId: MapLayerId) => void
   setDefaultLocation: (location: { lat: number; lon: number; name: string } | null) => void
   setApiKey: (key: keyof ApiKeys, value: string) => void
+  setMarineModel: (model: MarineModelId) => void
+  setWindModel: (model: WindModelId) => void
+  setBulletinZone: (zone: string) => void
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -38,6 +46,10 @@ export const useSettingsStore = create<SettingsState>()(
         maptiler: '',
         shom: '',
       },
+      // Préférences Marine (défauts)
+      marineModel: 'auto',
+      windModel: 'arome_france_hd',
+      bulletinZone: 'FQLR30',
       setWeatherSource: (source) => set({ weatherSource: source }),
       setWeatherModel: (model) => set({ weatherModel: model }),
       setUnits: (units) => set({ units }),
@@ -51,13 +63,15 @@ export const useSettingsStore = create<SettingsState>()(
       setDefaultLocation: (location) => set({ defaultLocation: location }),
       setApiKey: (key, value) =>
         set((state) => ({ apiKeys: { ...state.apiKeys, [key]: value } })),
+      setMarineModel: (model) => set({ marineModel: model }),
+      setWindModel: (model) => set({ windModel: model }),
+      setBulletinZone: (zone) => set({ bulletinZone: zone }),
     }),
     {
       name: 'fishweather-settings',
       storage: createJSONStorage(() => localStorage),
-      version: 1,
+      version: 2,
       migrate: (persistedState: unknown, _fromVersion: number) => {
-        // v0 → v1 : s'assurer que tous les champs existent (migration souple)
         const state = (persistedState ?? {}) as Partial<SettingsState>
         return {
           weatherSource: state.weatherSource ?? 'openmeteo',
@@ -75,6 +89,9 @@ export const useSettingsStore = create<SettingsState>()(
             maptiler: state.apiKeys?.maptiler ?? '',
             shom: state.apiKeys?.shom ?? '',
           },
+          marineModel: state.marineModel ?? 'auto',
+          windModel: state.windModel ?? 'arome_france_hd',
+          bulletinZone: state.bulletinZone ?? 'FQLR30',
         }
       },
     }
