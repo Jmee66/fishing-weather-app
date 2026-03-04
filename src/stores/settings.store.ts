@@ -55,6 +55,28 @@ export const useSettingsStore = create<SettingsState>()(
     {
       name: 'fishweather-settings',
       storage: createJSONStorage(() => localStorage),
+      version: 1,
+      migrate: (persistedState: unknown, _fromVersion: number) => {
+        // v0 → v1 : s'assurer que tous les champs existent (migration souple)
+        const state = (persistedState ?? {}) as Partial<SettingsState>
+        return {
+          weatherSource: state.weatherSource ?? 'openmeteo',
+          weatherModel: state.weatherModel ?? 'auto',
+          units: state.units ?? 'metric',
+          defaultTileSource: state.defaultTileSource ?? 'osm',
+          activeLayers: state.activeLayers ?? ['fishing_spots'],
+          defaultLocation: state.defaultLocation ?? null,
+          language: state.language ?? 'fr',
+          apiKeys: {
+            owm: state.apiKeys?.owm ?? '',
+            meteofrance: state.apiKeys?.meteofrance ?? '',
+            copernicus_user: state.apiKeys?.copernicus_user ?? '',
+            copernicus_pass: state.apiKeys?.copernicus_pass ?? '',
+            maptiler: state.apiKeys?.maptiler ?? '',
+            shom: state.apiKeys?.shom ?? '',
+          },
+        }
+      },
     }
   )
 )

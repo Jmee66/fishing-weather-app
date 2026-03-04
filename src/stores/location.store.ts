@@ -70,6 +70,15 @@ export const useLocationStore = create<LocationState>()(
     {
       name: 'fishweather-location',
       storage: createJSONStorage(() => localStorage),
+      version: 1,
+      migrate: (persistedState: unknown, _fromVersion: number) => {
+        // Migration souple : préserver selectedLocation et favourites existants
+        const state = (persistedState ?? {}) as Partial<Pick<LocationState, 'selectedLocation' | 'favourites'>>
+        return {
+          selectedLocation: state.selectedLocation ?? null,
+          favourites: state.favourites ?? [],
+        }
+      },
       partialize: (s) => ({ selectedLocation: s.selectedLocation, favourites: s.favourites }),
     }
   )
