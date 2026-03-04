@@ -6,7 +6,9 @@ import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
 import { useMarineWeather } from '@/hooks/useMarineWeather'
 import { useMarineConsensus } from '@/hooks/useMarineConsensus'
+import { useWindGrid } from '@/hooks/useWindGrid'
 import { useTides } from '@/hooks/useTides'
+import WindParticleMap from '@/components/marine/WindParticleMap'
 import { useLocationStore } from '@/stores/location.store'
 import { getBeaufortFromMs, getBeaufortLabel, getBeaufortColor } from '@/utils/beaufort'
 import { getDouglasFromHeight, getDouglasLabel } from '@/utils/douglas'
@@ -211,6 +213,7 @@ export default function MarinePage() {
   const { data: marine, isLoading, error } = useMarineWeather(coords ?? undefined, marineModel)
   const { data: tides, isLoading: tidesLoading } = useTides(coords ?? undefined)
   const { data: consensus, isLoading: consensusLoading } = useMarineConsensus(coords ?? undefined)
+  const { data: windGrid, isLoading: windGridLoading } = useWindGrid(coords ?? undefined)
 
   const tabs = [
     { id: 'vent',    label: 'Vent' },
@@ -353,6 +356,23 @@ export default function MarinePage() {
           {!marine && !isLoading && (
             <Alert type="info" title="Pas de données">Aucune donnée marine disponible pour cette position.</Alert>
           )}
+
+          {/* ── Mini-carte particules de vent style Windy ── */}
+          <Card padding="none">
+            <div className="px-4 py-2.5 border-b border-[var(--border-subtle)] flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold text-slate-100 text-sm">Champ de vent — Animation</h3>
+                <p className="text-[10px] text-slate-500 mt-0.5">Grille 5×5 pts · Open-Meteo · ~20 km résol.</p>
+              </div>
+              {windGrid && <span className="text-[9px] text-green-400 font-medium">● En direct</span>}
+            </div>
+            <WindParticleMap
+              coords={{ lat: lat!, lon: lon! }}
+              windGrid={windGrid}
+              loading={windGridLoading}
+              height={260}
+            />
+          </Card>
 
           {/* ── Bandeau consensus multi-modèles ── */}
           {consensusLoading && (

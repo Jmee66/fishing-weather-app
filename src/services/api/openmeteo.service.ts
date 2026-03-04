@@ -268,8 +268,106 @@ export async function fetchMarineSnapshot(
   }
 }
 
+// ── Grille de vent pour leaflet-velocity ────────────────────────────────────
+// Format attendu par leaflet-velocity (grib2json-like) :
+// [{ header: {nx, ny, lo1, la1, lo2, la2, dx, dy, ...}, data: float[] }, // U
+//  { header: {...}, data: float[] }]  // V
+export interface WindGridData {
+  header: {
+    parameterCategory: number
+    parameterNumber: number
+    lo1: number   // lon ouest (deg)
+    la1: number   // lat nord (deg)
+    lo2: number   // lon est
+    la2: number   // lat sud
+    dx: number    // pas lon
+    dy: number    // pas lat
+    nx: number    // nb points lon
+    ny: number    // nb points lat
+  }
+  data: number[]
+}
+
+/**
+ * Fetch une grille NxN de vent autour de coords et retourne le format leaflet-velocity.
+ * On utilise l'API multi-points d'Open-Meteo (lat/lon séparés par virgules).
+ */
+export async function fetchMarineWindGrid(
+  coords: Coordinates,
+  gridSize = 5,   // 5×5 = 25 points
+  span = 1.0      // ±0.5° autour du centre (span total = 1°)
+): Promise<[WindGridData, WindGridData]> {
+  const step = span / (gridSize - 1)
+  const half = span / 2
+
+  // Générer les lat/lon de la grille
+  const lats: number[] = []
+  const lons: number[] = []
+  for (let r = 0; r < gridSize; r++) {
+    lats.push(Number((coords.lat + half - r * step).toFixed(4)))
+  }
+  for (let c = 0; c < gridSize; c++) {
+    lons.push(Number((coords.lon - half + c * step).toFixed(4)))
+  }
+
+  // Toutes les combinaisons (gridSize² points)
+  const allLats: number[] = []
+  const allLons: number[] = []
+  for (const la of lats) {
+    for (const lo of lons) {
+      allLats.push(la)
+      allLons.push(lo)
+    }
+  }
+
+  const { data } = await axios.get(`${OPENMETEO_BASE_URL}/forecast`, {
+    params: {
+      latitude: allLats.join(','),
+      longitude: allLons.join(','),
+      hourly: ['wind_speed_10m', 'wind_direction_10m'].join(','),
+      timezone: 'auto',
+      forecast_days: 1,
+    },
+  })
+
+  // Extraire H+0 pour chaque point (les réponses multi-points sont dans un tableau)
+  const responses: Array<{ hourly: { wind_speed_10m: number[]; wind_direction_10m: number[] } }> =
+    Array.isArray(data) ? data : [data]
+
+  const uData: number[] = []
+  const vData: number[] = []
+
+  for (const resp of responses) {
+    const speed = (resp.hourly.wind_speed_10m?.[0] ?? 0) / 3.6 // km/h → m/s
+    const dir   = resp.hourly.wind_direction_10m?.[0] ?? 0     // degrés
+    const dirRad = (dir * Math.PI) / 180
+    // Convention météo : dir = d'où vient le vent → vecteur de déplacement = opposé
+    uData.push(-speed * Math.sin(dirRad))  // composante U (est+)
+    vData.push(-speed * Math.cos(dirRad))  // composante V (nord+)
+  }
+
+  const header: WindGridData['header'] = {
+    parameterCategory: 2,
+    parameterNumber: 2,   // 2 = U, 3 = V (convention GRIB2)
+    lo1: lons[0],
+    la1: lats[0],
+    lo2: lons[lons.length - 1],
+    la2: lats[lats.length - 1],
+    dx: step,
+    dy: step,
+    nx: gridSize,
+    ny: gridSize,
+  }
+
+  return [
+    { header: { ...header, parameterNumber: 2 }, data: uData },
+    { header: { ...header, parameterNumber: 3 }, data: vData },
+  ]
+}
+
 export const openMeteoService = {
   getWeather: fetchOpenMeteoWeather,
   getMarineForecast: fetchOpenMeteoMarine,
   getMarineSnapshot: fetchMarineSnapshot,
+  getWindGrid: fetchMarineWindGrid,
 }
