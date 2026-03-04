@@ -192,7 +192,7 @@ export type MarineModelId = typeof MARINE_MODELS[number]['id']
 // AROME/AROME HD = Météo-France, très haute résolution locale (1.3-2.5 km)
 export const WIND_MODELS = [
   {
-    id: 'arome_hd',
+    id: 'arome_france_hd',
     name: 'AROME HD',
     desc: 'Météo-France — 1.3 km, meilleur à court terme pour la France',
     stars: 5,
@@ -202,7 +202,7 @@ export const WIND_MODELS = [
     available: 'france', // uniquement disponible sur la France
   },
   {
-    id: 'arome',
+    id: 'arome_france',
     name: 'AROME',
     desc: 'Météo-France — 2.5 km, haute résolution France',
     stars: 5,
@@ -266,7 +266,7 @@ export interface HourlyWind {
 // Fetch vent horaire depuis l'API atmosphérique (AROME, ECMWF, GFS…)
 export async function fetchAtmosphericWind(
   coords: Coordinates,
-  windModel: WindModelId = 'arome_hd'
+  windModel: WindModelId = 'arome_france_hd'
 ): Promise<HourlyWind[]> {
   const { data } = await axios.get(`${OPENMETEO_BASE_URL}/forecast`, {
     params: {
@@ -406,7 +406,7 @@ export async function fetchMarineWindGrid(
   coords: Coordinates,
   gridSize = 5,   // 5×5 = 25 points
   span = 1.0,     // ±0.5° autour du centre (span total = 1°)
-  windModel: WindModelId = 'arome_hd'
+  windModel: WindModelId = 'arome_france_hd'
 ): Promise<[WindGridData, WindGridData]> {
   const step = span / (gridSize - 1)
   const half = span / 2

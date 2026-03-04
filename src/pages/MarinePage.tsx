@@ -262,7 +262,7 @@ export default function MarinePage() {
   const [tab, setTab] = useState('vent')
   const [bulletinZone, setBulletinZone] = useState('FQLR30')
   const [marineModel, setMarineModel] = useState<MarineModelId>('auto')
-  const [windModel, setWindModel] = useState<WindModelId>('arome_hd')
+  const [windModel, setWindModel] = useState<WindModelId>('arome_france_hd')
   const selectedLat = useLocationStore((s) => s.selectedLocation?.lat)
   const selectedLon = useLocationStore((s) => s.selectedLocation?.lon)
   const currentLat  = useLocationStore((s) => s.currentPosition?.lat)

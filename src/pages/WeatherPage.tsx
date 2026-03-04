@@ -12,7 +12,7 @@ import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
 const MODEL_LABELS: Record<string, string> = {
-  auto: 'Auto', arome: 'AROME 2.5km', arome_hd: 'AROME HD 1.3km',
+  auto: 'Auto', arome_france: 'AROME 2.5km', arome_france_hd: 'AROME HD 1.3km',
   arpege: 'ARPEGE 10km', gfs: 'GFS', ecmwf: 'ECMWF', icon: 'ICON',
 }
 

@@ -42,11 +42,11 @@ export default function SettingsPage() {
       { value: 'ecmwf', label: 'ECMWF IFS' },
       { value: 'gfs', label: 'GFS (NOAA)' },
       { value: 'icon', label: 'ICON (DWD)' },
-      { value: 'arome', label: 'AROME (MF)' },
+      { value: 'arome_france', label: 'AROME (MF)' },
     ],
     meteofrance: [
-      { value: 'arome', label: 'AROME (2.5 km)' },
-      { value: 'arome_hd', label: 'AROME HD (1.3 km)' },
+      { value: 'arome_france', label: 'AROME (2.5 km)' },
+      { value: 'arome_france_hd', label: 'AROME HD (1.3 km)' },
       { value: 'arpege', label: 'ARPEGE (Global)' },
     ],
     owm: [

@@ -23,8 +23,8 @@ export const GEOAPIGOUV_URL = 'https://geo.api.gouv.fr'
 
 export const WEATHER_MODELS = [
   { id: 'auto', name: 'Auto (recommandé)', source: 'openmeteo', description: 'Sélection automatique du meilleur modèle' },
-  { id: 'arome', name: 'AROME 2.5km', source: 'meteofrance', description: 'Haute résolution France, 2.5km' },
-  { id: 'arome_hd', name: 'AROME HD 1.3km', source: 'meteofrance', description: 'Très haute résolution, 1.3km' },
+  { id: 'arome_france', name: 'AROME 2.5km', source: 'meteofrance', description: 'Haute résolution France, 2.5km' },
+  { id: 'arome_france_hd', name: 'AROME HD 1.3km', source: 'meteofrance', description: 'Très haute résolution, 1.3km' },
   { id: 'arpege', name: 'ARPEGE 10km', source: 'meteofrance', description: 'Prévisions globales Météo-France' },
   { id: 'gfs', name: 'GFS 22km', source: 'owm', description: 'Modèle américain NOAA, global' },
   { id: 'ecmwf', name: 'ECMWF IFS', source: 'openmeteo', description: 'Centre européen, très fiable' },

@@ -2,8 +2,8 @@ export type WeatherSource = 'owm' | 'meteofrance' | 'openmeteo'
 
 export type WeatherModel =
   | 'auto'
-  | 'arome'
-  | 'arome_hd'
+  | 'arome_france'
+  | 'arome_france_hd'
   | 'arpege'
   | 'gfs'
   | 'ecmwf'
