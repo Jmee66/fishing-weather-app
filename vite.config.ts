@@ -103,8 +103,8 @@ export default defineConfig({
         ],
       },
       manifest: {
-        name: 'FishWeather - Météo Pêche & Navigation',
-        short_name: 'FishWeather',
+        name: 'Jmee Deep Weather - Météo Pêche & Navigation',
+        short_name: 'Jmee Deep Weather',
         description: 'Météo marine, cartographie, marées et conditions de pêche',
         theme_color: '#0f4c81',
         background_color: '#f0f9ff',

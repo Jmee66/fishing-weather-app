@@ -3,7 +3,7 @@ import { useLocationStore } from '@/stores/location.store'
 import { IconSettings, IconGPS } from '@/components/ui/icons/WeatherIcons'
 
 const PAGE_TITLES: Record<string, string> = {
-  '/': 'FishWeather',
+  '/': 'Jmee Deep Weather',
   '/weather': 'Météo',
   '/marine': 'Météo Marine',
   '/map': 'Carte',
@@ -19,7 +19,7 @@ export default function TopNav() {
   const selectedLocation = useLocationStore((s) => s.selectedLocation)
   const currentPosition = useLocationStore((s) => s.currentPosition)
 
-  const title = PAGE_TITLES[location.pathname] ?? 'FishWeather'
+  const title = PAGE_TITLES[location.pathname] ?? 'Jmee Deep Weather'
   const locationName = selectedLocation?.name ?? currentPosition?.name ?? (currentPosition ? 'Position GPS' : 'Aucune position')
   const hasGPS = !!currentPosition && !selectedLocation
   const isHome = location.pathname === '/'
