@@ -22,7 +22,7 @@ export default function WindWidget({ windSpeed, windDeg, windGust, compact = fal
           className="w-10 h-10 rounded-full border-2 flex items-center justify-center text-lg"
           style={{ borderColor: color }}
         >
-          <span style={{ display: 'inline-block', transform: `rotate(${windDeg}deg)` }}>↑</span>
+          <span style={{ display: 'inline-block', transform: `rotate(${windDeg + 180}deg)` }}>↑</span>
         </div>
       </div>
       <div className="flex-1 min-w-0">
