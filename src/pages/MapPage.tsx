@@ -80,7 +80,7 @@ function renderSpotsOnLayer(
           e.stopPropagation()
           marker.closePopup()
           onEdit(spot)
-        })
+        }, { once: true })
       }
     })
   })
