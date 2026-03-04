@@ -120,11 +120,84 @@ export async function fetchOpenMeteoWeather(
   }
 }
 
-export async function fetchOpenMeteoMarine(coords: Coordinates): Promise<MarineForecast> {
+// ── Indice de fiabilité statique par modèle ──────────────────────────────────
+// stars: 1-5 (qualité générale), coastal: 1-5 (précision zone côtière)
+// resolution: résolution spatiale en km, updateHz: fréquence de mise à jour en heures
+export const MARINE_MODELS = [
+  {
+    id: 'auto',
+    name: 'Auto',
+    desc: 'Meilleur modèle disponible selon la position',
+    stars: 4,
+    coastal: 4,
+    resolution: 9,
+    updateHz: 6,
+    note: 'Sélection automatique ECMWF/MF selon la zone',
+  },
+  {
+    id: 'mfwave',
+    name: 'MF Wave',
+    desc: 'Météo-France — spécialisé Atlantique/Méditerranée',
+    stars: 5,
+    coastal: 5,
+    resolution: 8,
+    updateHz: 12,
+    note: 'Référence pour les côtes françaises et la Méditerranée',
+  },
+  {
+    id: 'mfcurrents',
+    name: 'MF Courants',
+    desc: 'Météo-France — courants marins',
+    stars: 4,
+    coastal: 4,
+    resolution: 8,
+    updateHz: 12,
+    note: 'Optimisé courants, moins précis pour vagues',
+  },
+  {
+    id: 'era5_ocean',
+    name: 'ERA5 Ocean',
+    desc: 'ECMWF — réanalyse historique 1940-présent',
+    stars: 3,
+    coastal: 3,
+    resolution: 50,
+    updateHz: 24,
+    note: 'Réanalyse historique, moins adapté aux prévisions',
+  },
+  {
+    id: 'ecmwf_wam',
+    name: 'ECMWF WAM',
+    desc: 'ECMWF — modèle vagues global de référence',
+    stars: 5,
+    coastal: 4,
+    resolution: 9,
+    updateHz: 6,
+    note: 'Standard mondial, excellent open sea, bon côtier',
+  },
+  {
+    id: 'gwam',
+    name: 'GFS WAVEWATCH',
+    desc: 'NOAA — WAVEWATCH III global',
+    stars: 3,
+    coastal: 3,
+    resolution: 25,
+    updateHz: 6,
+    note: 'Bon global, résolution moins fine en zone côtière',
+  },
+] as const
+
+export type MarineModelId = typeof MARINE_MODELS[number]['id']
+
+// ── Fetch marine (modèle unique) ─────────────────────────────────────────────
+export async function fetchOpenMeteoMarine(
+  coords: Coordinates,
+  marineModel: MarineModelId = 'auto'
+): Promise<MarineForecast> {
   const { data } = await axios.get(`${OPENMETEO_MARINE_URL}/marine`, {
     params: {
       latitude: coords.lat,
       longitude: coords.lon,
+      ...(marineModel !== 'auto' ? { models: marineModel } : {}),
       hourly: [
         'wave_height', 'wave_direction', 'wave_period',
         'swell_wave_height', 'swell_wave_direction', 'swell_wave_period',
@@ -155,7 +228,48 @@ export async function fetchOpenMeteoMarine(coords: Coordinates): Promise<MarineF
   return { lat: data.latitude, lon: data.longitude, hourly }
 }
 
+// ── Fetch marine simplifié pour le consensus (seulement vent + vagues H0-H12) ──
+export interface MarineSnapshot {
+  model: MarineModelId
+  wind_speed: number    // m/s
+  wind_dir: number      // degrés
+  wave_height: number   // mètres
+  // prochaines 12h, toutes les heures
+  hourly: Array<{ wind_speed: number; wave_height: number }>
+}
+
+export async function fetchMarineSnapshot(
+  coords: Coordinates,
+  marineModel: Exclude<MarineModelId, 'auto' | 'era5_ocean'>
+): Promise<MarineSnapshot> {
+  const { data } = await axios.get(`${OPENMETEO_MARINE_URL}/marine`, {
+    params: {
+      latitude: coords.lat,
+      longitude: coords.lon,
+      models: marineModel,
+      hourly: ['wave_height', 'wind_speed_10m', 'wind_direction_10m'].join(','),
+      timezone: 'auto',
+      forecast_days: 2,
+    },
+  })
+
+  const times = data.hourly.time as string[]
+  const hourly = times.slice(0, 12).map((_, i) => ({
+    wind_speed: (data.hourly.wind_speed_10m?.[i] ?? 0) / 3.6,
+    wave_height: data.hourly.wave_height?.[i] ?? 0,
+  }))
+
+  return {
+    model: marineModel,
+    wind_speed: (data.hourly.wind_speed_10m?.[0] ?? 0) / 3.6,
+    wind_dir: data.hourly.wind_direction_10m?.[0] ?? 0,
+    wave_height: data.hourly.wave_height?.[0] ?? 0,
+    hourly,
+  }
+}
+
 export const openMeteoService = {
   getWeather: fetchOpenMeteoWeather,
   getMarineForecast: fetchOpenMeteoMarine,
+  getMarineSnapshot: fetchMarineSnapshot,
 }

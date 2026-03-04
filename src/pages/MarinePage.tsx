@@ -5,6 +5,7 @@ import Alert from '@/components/ui/Alert'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
 import { useMarineWeather } from '@/hooks/useMarineWeather'
+import { useMarineConsensus } from '@/hooks/useMarineConsensus'
 import { useTides } from '@/hooks/useTides'
 import { useLocationStore } from '@/stores/location.store'
 import { getBeaufortFromMs, getBeaufortLabel, getBeaufortColor } from '@/utils/beaufort'
@@ -68,26 +69,76 @@ function BeaufortBar({ force }: { force: number }) {
   )
 }
 
-/** Sélecteur de modèle marine */
-function ModelSelector({ value, onChange }: { value: MarineModelId; onChange: (v: MarineModelId) => void }) {
+/** Étoiles de fiabilité */
+function Stars({ count, max = 5, color = '#fbbf24' }: { count: number; max?: number; color?: string }) {
   return (
-    <div className="flex flex-wrap gap-1.5 mb-3">
-      {MARINE_MODELS.map((m) => (
-        <button
-          key={m.id}
-          type="button"
-          onClick={() => onChange(m.id)}
-          title={m.desc}
-          className="px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors"
-          style={{
-            backgroundColor: value === m.id ? 'rgb(14 165 233 / 0.2)' : 'var(--bg-surface)',
-            borderColor:     value === m.id ? 'rgb(56 189 248 / 0.6)' : 'var(--border-default)',
-            color:           value === m.id ? 'rgb(125 211 252)'      : 'var(--text-secondary)',
-          }}
-        >
-          {m.name}
-        </button>
+    <span className="inline-flex gap-0.5">
+      {Array.from({ length: max }, (_, i) => (
+        <span key={i} style={{ color: i < count ? color : 'rgba(100,116,139,0.3)', fontSize: '8px', lineHeight: 1 }}>★</span>
       ))}
+    </span>
+  )
+}
+
+/** Sélecteur de modèle marine avec indice de fiabilité statique */
+function ModelSelector({ value, onChange }: { value: MarineModelId; onChange: (v: MarineModelId) => void }) {
+  const selected = MARINE_MODELS.find((m) => m.id === value)
+  return (
+    <div className="mb-3">
+      <div className="flex flex-wrap gap-1.5 mb-2">
+        {MARINE_MODELS.map((m) => {
+          const isActive = value === m.id
+          return (
+            <button
+              key={m.id}
+              type="button"
+              onClick={() => onChange(m.id)}
+              title={`${m.desc}\nRésolution : ${m.resolution} km · Màj toutes les ${m.updateHz}h`}
+              className="px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors"
+              style={{
+                backgroundColor: isActive ? 'rgb(14 165 233 / 0.2)' : 'var(--bg-surface)',
+                borderColor:     isActive ? 'rgb(56 189 248 / 0.6)' : 'var(--border-default)',
+                color:           isActive ? 'rgb(125 211 252)'      : 'var(--text-secondary)',
+              }}
+            >
+              <span>{m.name}</span>
+              <span className="ml-1.5 opacity-80">
+                <Stars count={m.coastal} color={isActive ? '#7dd3fc' : '#64748b'} />
+              </span>
+            </button>
+          )
+        })}
+      </div>
+      {/* Détail du modèle sélectionné */}
+      {selected && (
+        <div
+          className="flex items-center gap-3 px-3 py-2 rounded-xl text-[10px]"
+          style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}
+        >
+          <div className="flex-1">
+            <span className="text-slate-300 font-medium">{selected.name}</span>
+            <span className="text-slate-500 ml-1.5">{selected.note}</span>
+          </div>
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <div className="text-center">
+              <p className="text-[9px] text-slate-600 mb-0.5">Qualité</p>
+              <Stars count={selected.stars} color="#fbbf24" />
+            </div>
+            <div className="text-center">
+              <p className="text-[9px] text-slate-600 mb-0.5">Côtier</p>
+              <Stars count={selected.coastal} color="#38bdf8" />
+            </div>
+            <div className="text-center">
+              <p className="text-[9px] text-slate-600 mb-0.5">Résol.</p>
+              <p className="text-slate-400">{selected.resolution} km</p>
+            </div>
+            <div className="text-center">
+              <p className="text-[9px] text-slate-600 mb-0.5">Màj</p>
+              <p className="text-slate-400">{selected.updateHz}h</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -159,6 +210,7 @@ export default function MarinePage() {
   const { units } = useSettingsStore()
   const { data: marine, isLoading, error } = useMarineWeather(coords ?? undefined, marineModel)
   const { data: tides, isLoading: tidesLoading } = useTides(coords ?? undefined)
+  const { data: consensus, isLoading: consensusLoading } = useMarineConsensus(coords ?? undefined)
 
   const tabs = [
     { id: 'vent',    label: 'Vent' },
@@ -301,6 +353,133 @@ export default function MarinePage() {
           {!marine && !isLoading && (
             <Alert type="info" title="Pas de données">Aucune donnée marine disponible pour cette position.</Alert>
           )}
+
+          {/* ── Bandeau consensus multi-modèles ── */}
+          {consensusLoading && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-slate-500"
+              style={{ backgroundColor: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
+              <div className="w-3 h-3 rounded-full border border-slate-500 border-t-transparent animate-spin flex-shrink-0" />
+              Analyse du consensus entre modèles…
+            </div>
+          )}
+          {consensus && !consensusLoading && (() => {
+            const { confidence, confidenceLabel, confidenceColor, snapshots, std_wind_speed, std_wave_height, mean_wind_speed, mean_wave_height, trend } = consensus
+            const barWidth = `${confidence}%`
+            return (
+              <Card>
+                {/* En-tête score */}
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm">🎯</span>
+                    <p className="text-xs font-semibold text-slate-300">Consensus {snapshots.length} modèles</p>
+                  </div>
+                  <span className="text-sm font-bold" style={{ color: confidenceColor }}>
+                    {confidence}%
+                  </span>
+                </div>
+
+                {/* Barre de confiance */}
+                <div className="h-2 rounded-full mb-1 overflow-hidden" style={{ backgroundColor: 'var(--bg-base)' }}>
+                  <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{ width: barWidth, backgroundColor: confidenceColor }}
+                  />
+                </div>
+                <p className="text-[10px] mb-3 font-medium" style={{ color: confidenceColor }}>
+                  {confidenceLabel} entre {snapshots.map((s) => s.model === 'mfwave' ? 'MF Wave' : s.model === 'ecmwf_wam' ? 'ECMWF' : 'GFS').join(' · ')}
+                </p>
+
+                {/* Plage de valeurs entre modèles */}
+                <div className="grid grid-cols-2 gap-2 mb-3">
+                  <div className="rounded-xl p-2" style={{ backgroundColor: 'var(--bg-base)' }}>
+                    <p className="text-[9px] text-slate-600 mb-0.5 uppercase">Vent · moyenne ± écart</p>
+                    <p className="text-xs font-semibold text-slate-200">
+                      {formatWindSpeed(mean_wind_speed, units)}
+                      <span className="text-slate-500 font-normal ml-1">
+                        ±{formatWindSpeed(std_wind_speed, units)}
+                      </span>
+                    </p>
+                  </div>
+                  <div className="rounded-xl p-2" style={{ backgroundColor: 'var(--bg-base)' }}>
+                    <p className="text-[9px] text-slate-600 mb-0.5 uppercase">Houle · moyenne ± écart</p>
+                    <p className="text-xs font-semibold text-slate-200">
+                      {mean_wave_height.toFixed(2)} m
+                      <span className="text-slate-500 font-normal ml-1">
+                        ±{std_wave_height.toFixed(2)} m
+                      </span>
+                    </p>
+                  </div>
+                </div>
+
+                {/* Comparaison par modèle */}
+                <div className="space-y-1 mb-3">
+                  {snapshots.map((s) => {
+                    const modelName = s.model === 'mfwave' ? 'MF Wave' : s.model === 'ecmwf_wam' ? 'ECMWF WAM' : 'GFS WWATCH'
+                    const modelInfo = MARINE_MODELS.find((m) => m.id === s.model)
+                    const windBf = getBeaufortFromMs(s.wind_speed)
+                    const bfCol = getBeaufortColor(windBf)
+                    const windDiff = s.wind_speed - mean_wind_speed
+                    const waveDiff = s.wave_height - mean_wave_height
+                    return (
+                      <div key={s.model} className="flex items-center gap-2 text-[10px] py-1 px-2 rounded-lg"
+                        style={{ backgroundColor: 'var(--bg-base)' }}>
+                        <div className="flex-1">
+                          <span className="text-slate-300 font-medium">{modelName}</span>
+                          {modelInfo && (
+                            <span className="ml-1 opacity-50">
+                              <Stars count={modelInfo.coastal} color="#38bdf8" />
+                            </span>
+                          )}
+                        </div>
+                        <span style={{ color: bfCol }} className="font-semibold">
+                          {formatWindSpeed(s.wind_speed, units)}
+                        </span>
+                        <span className={windDiff > 0.5 ? 'text-red-400' : windDiff < -0.5 ? 'text-green-400' : 'text-slate-500'}>
+                          {windDiff > 0 ? '+' : ''}{formatWindSpeed(Math.abs(windDiff), units)}
+                        </span>
+                        <span className="text-sky-400 ml-1">{s.wave_height.toFixed(1)}m</span>
+                        <span className={waveDiff > 0.15 ? 'text-red-400' : waveDiff < -0.15 ? 'text-green-400' : 'text-slate-500'}>
+                          {waveDiff > 0 ? '+' : ''}{Math.abs(waveDiff).toFixed(2)}m
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+
+                {/* Mini sparkline tendance 12h — enveloppe min/max vent */}
+                {trend.length >= 4 && (() => {
+                  const W = 280, H = 32, PAD = 4
+                  const maxW = Math.max(...trend.map((t) => t.max_wind), 0.1)
+                  const toX = (i: number) => PAD + (i / (trend.length - 1)) * (W - PAD * 2)
+                  const toY = (v: number) => H - PAD - (v / maxW) * (H - PAD * 2)
+                  const pathMean = trend.map((t, i) => `${i === 0 ? 'M' : 'L'}${toX(i).toFixed(1)},${toY(t.mean_wind).toFixed(1)}`).join(' ')
+                  const pathEnv = [
+                    ...trend.map((t, i) => `${i === 0 ? 'M' : 'L'}${toX(i).toFixed(1)},${toY(t.max_wind).toFixed(1)}`),
+                    ...[...trend].reverse().map((t, i) => `L${toX(trend.length - 1 - i).toFixed(1)},${toY(t.min_wind).toFixed(1)}`),
+                    'Z'
+                  ].join(' ')
+                  return (
+                    <div>
+                      <p className="text-[9px] text-slate-600 mb-1">Enveloppe vent 12h (min/max entre modèles)</p>
+                      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: H }}>
+                        <path d={pathEnv} fill={`${confidenceColor}20`} />
+                        <path d={pathMean} fill="none" stroke={confidenceColor} strokeWidth="1.5" strokeLinejoin="round" />
+                        {trend.map((_, i) => i % 3 === 0 && (
+                          <text key={i} x={toX(i)} y={H - 1} textAnchor="middle" fontSize="6" fill="#475569">
+                            +{i}h
+                          </text>
+                        ))}
+                      </svg>
+                    </div>
+                  )
+                })()}
+
+                <p className="text-[9px] text-slate-600 mt-2">
+                  Données Open-Meteo · Mis à jour il y a &lt; 15 min · {confidence >= 80 ? 'Prévision fiable' : confidence >= 60 ? 'Légère incertitude' : '⚠ Forte incertitude — vérifier Windy/Meteoconsult'}
+                </p>
+              </Card>
+            )
+          })()}
 
           {marine && now && (() => {
             const gustRatio = now.wind_gusts_10m / Math.max(now.wind_speed_10m, 0.1)
