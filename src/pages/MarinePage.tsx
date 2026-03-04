@@ -352,73 +352,135 @@ export default function MarinePage() {
             </div>
           </Card>
 
-          {/* Lien vers bulletin officiel */}
+          {/* Synthèse étendue depuis les données open-meteo */}
+          {now && marine && (
+            <Card>
+              <p className="text-xs text-slate-500 mb-3">
+                Synthèse conditions actuelles — {MF_ZONES.find(z => z.id === bulletinZone)?.name}
+              </p>
+
+              {/* Vent */}
+              <div className="mb-3 pb-3 border-b border-[var(--border-subtle)]">
+                <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1.5">Vent</p>
+                <div className="flex items-center gap-2 mb-1">
+                  <WindArrow deg={now.wind_direction_10m} color={beaufortColor} size={22} />
+                  <span className="text-lg font-bold" style={{ color: beaufortColor }}>
+                    {formatWindSpeed(now.wind_speed_10m, units)}
+                  </span>
+                  <span className="text-sm text-slate-300">
+                    {getWindDirectionLabel(now.wind_direction_10m)} · Bf {beaufort} — {getBeaufortLabel(beaufort)}
+                  </span>
+                </div>
+                {now.wind_gusts_10m > 0 && (
+                  <p className="text-sm text-amber-300 ml-8">
+                    Rafales jusqu'à {formatWindSpeed(now.wind_gusts_10m, units)}
+                  </p>
+                )}
+                {/* Évolution sur 12h */}
+                {marine.hourly.length >= 12 && (() => {
+                  const h6  = marine.hourly[6]
+                  const h12 = marine.hourly[12]
+                  const bf6  = getBeaufortFromMs(h6.wind_speed_10m)
+                  const bf12 = getBeaufortFromMs(h12.wind_speed_10m)
+                  return (
+                    <div className="flex gap-3 mt-2 ml-8 text-xs text-slate-500">
+                      <span>Dans 6h : <span style={{ color: getBeaufortColor(bf6) }}>Bf {bf6} {formatWindSpeed(h6.wind_speed_10m, units)}</span></span>
+                      <span>Dans 12h : <span style={{ color: getBeaufortColor(bf12) }}>Bf {bf12} {formatWindSpeed(h12.wind_speed_10m, units)}</span></span>
+                    </div>
+                  )
+                })()}
+              </div>
+
+              {/* État de la mer */}
+              <div className="mb-3 pb-3 border-b border-[var(--border-subtle)]">
+                <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1.5">État de la mer</p>
+                <div className="flex items-center gap-2 mb-1">
+                  <SwellArrow deg={now.wave_direction ?? 0} size={20} />
+                  <span className="text-lg font-bold text-sky-300">{now.wave_height.toFixed(1)} m</span>
+                  <span className="text-sm text-slate-300">
+                    {getDouglasLabel(getDouglasFromHeight(now.wave_height))}
+                    {now.wave_period != null && ` · ${now.wave_period.toFixed(0)}s`}
+                    {now.wave_direction != null && ` · ${getWindDirectionLabel(now.wave_direction)}`}
+                  </span>
+                </div>
+                {now.swell_wave_height != null && (
+                  <p className="text-sm text-sky-400 ml-8">
+                    Houle primaire {now.swell_wave_height.toFixed(1)} m
+                    {now.swell_wave_period != null && ` / ${now.swell_wave_period.toFixed(0)}s`}
+                    {now.swell_wave_direction != null && ` · ${getWindDirectionLabel(now.swell_wave_direction)}`}
+                  </p>
+                )}
+                {/* Évolution houle 12h */}
+                {marine.hourly.length >= 12 && (() => {
+                  const h6  = marine.hourly[6]
+                  const h12 = marine.hourly[12]
+                  return (
+                    <div className="flex gap-3 mt-2 ml-8 text-xs text-slate-500">
+                      <span>Dans 6h : <span className="text-sky-400">{h6.wave_height.toFixed(1)} m</span></span>
+                      <span>Dans 12h : <span className="text-sky-400">{h12.wave_height.toFixed(1)} m</span></span>
+                    </div>
+                  )
+                })()}
+              </div>
+
+              {/* Prévisions 24h résumées */}
+              <div>
+                <p className="text-[10px] text-slate-500 uppercase tracking-wider mb-1.5">Prévisions 24h</p>
+                <div className="space-y-1">
+                  {marine.hourly.slice(0, 24).filter((_, i) => i % 6 === 0).map((h, i) => {
+                    const bf = getBeaufortFromMs(h.wind_speed_10m)
+                    const dt = new Date(Date.now() + i * 6 * 3600 * 1000)
+                    return (
+                      <div key={i} className="flex items-center gap-2 py-1 text-xs">
+                        <span className="text-slate-500 w-12 flex-shrink-0">
+                          {i === 0 ? 'Maint.' : `+${i * 6}h`}
+                        </span>
+                        <WindArrow deg={h.wind_direction_10m} color={getBeaufortColor(bf)} size={13} />
+                        <span style={{ color: getBeaufortColor(bf) }} className="w-20 flex-shrink-0">
+                          Bf {bf} {formatWindSpeed(h.wind_speed_10m, units)}
+                        </span>
+                        <SwellArrow deg={h.wave_direction ?? 0} size={13} />
+                        <span className="text-sky-400">{h.wave_height.toFixed(1)} m</span>
+                        <span className="text-slate-600 ml-auto hidden">
+                          {format(dt, 'HH:mm')}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {/* Liens vers portail officiel MF */}
           <Card>
             <p className="text-xs text-slate-500 mb-2">Bulletin officiel Météo-France</p>
-            <p className="text-sm text-slate-300 mb-3">
-              Les bulletins côtiers officiels sont publiés en temps réel sur le portail Météo-France.
+            <p className="text-sm text-slate-400 mb-3">
+              Bulletins côtiers mis à jour 3×/jour (06h15, 12h15, 18h15) sur le portail Météo-France.
             </p>
             <a
-              href={`https://marine.meteofrance.fr/bulletins-cotiers`}
+              href="https://meteofrance.com/meteo-marine"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 w-full px-4 py-3 rounded-xl text-sm font-medium transition-colors"
               style={{ backgroundColor: 'rgb(14 165 233 / 0.15)', color: 'rgb(125 211 252)', border: '1px solid rgb(56 189 248 / 0.3)' }}
             >
               <span className="text-lg">🌊</span>
-              <span>Ouvrir les bulletins côtiers MF</span>
+              <span>Météo-France — Météo Marine</span>
               <span className="ml-auto text-sky-500">↗</span>
             </a>
             <a
-              href={`https://marine.meteofrance.fr/previsions-meteo-marine`}
+              href="https://donneespubliques.meteofrance.fr/?fond=produit&id_produit=304&id_rubrique=50"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 w-full px-4 py-3 rounded-xl text-sm font-medium mt-2 transition-colors"
               style={{ backgroundColor: 'var(--bg-surface)', color: 'var(--text-secondary)', border: '1px solid var(--border-default)' }}
             >
-              <span className="text-lg">📡</span>
-              <span>Prévisions marine détaillées</span>
+              <span className="text-lg">📄</span>
+              <span>Bulletins spéciaux marine (données publiques)</span>
               <span className="ml-auto">↗</span>
             </a>
           </Card>
-
-          {/* Données marines disponibles en temps réel */}
-          {now && (
-            <Card>
-              <p className="text-xs text-slate-500 mb-3">Synthèse conditions actuelles</p>
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center justify-between py-1.5 border-b border-[var(--border-subtle)]">
-                  <span className="text-slate-400">Vent</span>
-                  <span className="font-semibold text-slate-100 flex items-center gap-1.5">
-                    <WindArrow deg={now.wind_direction_10m} color={beaufortColor} size={16} />
-                    {formatWindSpeed(now.wind_speed_10m, units)} {getWindDirectionLabel(now.wind_direction_10m)}
-                    {' '}(Bf{beaufort})
-                  </span>
-                </div>
-                {now.wind_gusts_10m > 0 && (
-                  <div className="flex items-center justify-between py-1.5 border-b border-[var(--border-subtle)]">
-                    <span className="text-slate-400">Rafales</span>
-                    <span className="font-semibold text-amber-300">{formatWindSpeed(now.wind_gusts_10m, units)}</span>
-                  </div>
-                )}
-                <div className="flex items-center justify-between py-1.5 border-b border-[var(--border-subtle)]">
-                  <span className="text-slate-400">Mer</span>
-                  <span className="font-semibold text-sky-300 flex items-center gap-1.5">
-                    <SwellArrow deg={now.wave_direction ?? 0} size={16} />
-                    {now.wave_height.toFixed(1)} m — {getDouglasLabel(getDouglasFromHeight(now.wave_height))}
-                  </span>
-                </div>
-                {now.swell_wave_height != null && (
-                  <div className="flex items-center justify-between py-1.5">
-                    <span className="text-slate-400">Houle primaire</span>
-                    <span className="font-semibold text-sky-400">
-                      {now.swell_wave_height.toFixed(1)} m / {now.swell_wave_period?.toFixed(0)}s
-                    </span>
-                  </div>
-                )}
-              </div>
-            </Card>
-          )}
         </div>
       )}
 
