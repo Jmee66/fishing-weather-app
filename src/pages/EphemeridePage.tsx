@@ -3,6 +3,7 @@ import Alert from '@/components/ui/Alert'
 import { useEphemeris } from '@/hooks/useEphemeris'
 import { useLocationStore } from '@/stores/location.store'
 import { getEphemeris } from '@/utils/ephemeris'
+import DayArcChart from '@/components/ephemeris/DayArcChart'
 import { format, addDays } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
@@ -81,6 +82,13 @@ export default function EphemeridePage() {
             {today.moonPhaseName} — Illumination {Math.round(today.moonIllumination * 100)}%
           </p>
         </div>
+      )}
+
+      {today && (
+        <Card>
+          <p className="text-xs text-slate-500 mb-2">Chronogramme jour · aube · nuit</p>
+          <DayArcChart eph={today} date={new Date()} />
+        </Card>
       )}
 
       <Card padding="none">

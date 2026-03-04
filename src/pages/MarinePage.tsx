@@ -10,6 +10,7 @@ import { useMarineConsensus } from '@/hooks/useMarineConsensus'
 import { useWindGrid } from '@/hooks/useWindGrid'
 import { useTides } from '@/hooks/useTides'
 import WindParticleMap from '@/components/marine/WindParticleMap'
+import WaveChart from '@/components/marine/WaveChart'
 import { useLocationStore } from '@/stores/location.store'
 import { getBeaufortFromMs, getBeaufortLabel, getBeaufortColor } from '@/utils/beaufort'
 import { getDouglasFromHeight, getDouglasLabel } from '@/utils/douglas'
@@ -833,6 +834,12 @@ export default function MarinePage() {
                 </>
               )}
             </div>
+          </Card>
+
+          {/* Graphique houle 48h */}
+          <Card>
+            <p className="text-xs text-slate-500 mb-2">Évolution 48h</p>
+            <WaveChart hourly={marine.hourly} />
           </Card>
 
           {/* Tableau houle 48h (toutes les 3h) */}
