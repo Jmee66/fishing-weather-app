@@ -109,9 +109,9 @@ export async function fetchSHOMTides(coords: Coordinates): Promise<TideData> {
   const predictions: TidePrediction[] = times
     .map((t, i) => ({
       dt:     Math.floor(new Date(t).getTime() / 1000),
-      height: wls[i] ?? 0,
+      height: wls[i] as number | null,
     }))
-    .filter((p) => Number.isFinite(p.height))
+    .filter((p): p is TidePrediction => p.height != null && Number.isFinite(p.height as number))
 
   const events = detectEvents(predictions)
 
