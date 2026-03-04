@@ -429,6 +429,58 @@ export default function MarinePage() {
                     ))}
                   </div>
                 </Card>
+
+                {/* Sources externes pré-géolocalisées */}
+                <Card>
+                  <p className="text-xs text-slate-500 mb-1">Sources de référence pour navigation côtière</p>
+                  <p className="text-[10px] text-slate-600 mb-3">
+                    Résolution locale jusqu'à 1 km · Post-traitement expert · Recommandées pour navigation
+                  </p>
+                  <div className="space-y-2">
+                    <a
+                      href={`https://www.windy.com/${lat?.toFixed(3)}/${lon?.toFixed(3)}?${lat?.toFixed(3)},${lon?.toFixed(3)},11`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-colors"
+                      style={{ backgroundColor: 'rgb(99 102 241 / 0.15)', color: 'rgb(165 180 252)', border: '1px solid rgb(99 102 241 / 0.35)' }}
+                    >
+                      <span className="text-base flex-shrink-0">🌬️</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-xs">Windy.com</p>
+                        <p className="text-[10px] opacity-70">ECMWF · GFS · ICON — multi-modèles visuels</p>
+                      </div>
+                      <span className="text-indigo-400 flex-shrink-0">↗</span>
+                    </a>
+                    <a
+                      href={`https://marine.meteoconsult.fr/meteo-marine/carte-marine`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-colors"
+                      style={{ backgroundColor: 'rgb(14 165 233 / 0.12)', color: 'rgb(125 211 252)', border: '1px solid rgb(56 189 248 / 0.3)' }}
+                    >
+                      <span className="text-base flex-shrink-0">⚓</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-xs">Meteoconsult Marine</p>
+                        <p className="text-[10px] opacity-70">ENSMAR · Météo-France · résolution 1 km côtier</p>
+                      </div>
+                      <span className="text-sky-400 flex-shrink-0">↗</span>
+                    </a>
+                    <a
+                      href={`https://meteofrance.com/meteo-marine`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-colors"
+                      style={{ backgroundColor: 'var(--bg-surface)', color: 'var(--text-secondary)', border: '1px solid var(--border-default)' }}
+                    >
+                      <span className="text-base flex-shrink-0">🇫🇷</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-xs">Météo-France Marine</p>
+                        <p className="text-[10px] opacity-70">Bulletins côtiers officiels · 3×/jour</p>
+                      </div>
+                      <span className="flex-shrink-0">↗</span>
+                    </a>
+                  </div>
+                </Card>
               </>
             )
           })()}
