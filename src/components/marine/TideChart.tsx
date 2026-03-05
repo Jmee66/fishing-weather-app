@@ -7,12 +7,12 @@ interface TideChartProps {
   tides: TideData
 }
 
-const W = 340
-const H = 120
-const PAD_LEFT = 36
-const PAD_RIGHT = 12
-const PAD_TOP = 14
-const PAD_BOTTOM = 24
+const W = 360
+const H = 180
+const PAD_LEFT = 38
+const PAD_RIGHT = 14
+const PAD_TOP = 26
+const PAD_BOTTOM = 28
 
 export default function TideChart({ tides }: TideChartProps) {
   const { predictions, events } = tides
@@ -60,9 +60,14 @@ export default function TideChart({ tides }: TideChartProps) {
 
   if (points.length < 2) return null
 
-  const minH   = Math.min(...points.map((p) => p.height))
-  const maxH   = Math.max(...points.map((p) => p.height))
-  const hRange = maxH - minH || 0.1
+  const rawMinH = Math.min(...points.map((p) => p.height))
+  const rawMaxH = Math.max(...points.map((p) => p.height))
+  const rawRange = rawMaxH - rawMinH
+  // Padding vertical minimum : au moins 0.5m de marge, sinon la courbe paraît plate
+  const vPad  = Math.max(0.3, rawRange * 0.15)
+  const minH  = rawMinH - vPad
+  const maxH  = rawMaxH + vPad
+  const hRange = maxH - minH
   const minT   = points[0].dt
   const maxT   = points[points.length - 1].dt
   const tRange = maxT - minT || 1
@@ -85,7 +90,8 @@ export default function TideChart({ tides }: TideChartProps) {
   const nowDt = Date.now() / 1000
   const nowX  = nowDt >= minT && nowDt <= maxT ? toX(nowDt) : null
 
-  const yTicks = [minH, minH + hRange / 2, maxH]
+  // Ticks sur les vraies hauteurs (sans le padding visuel), plus une valeur intermédiaire
+  const yTicks = [rawMinH, (rawMinH + rawMaxH) / 2, rawMaxH]
 
   const xTickDts: number[] = []
   for (let t = Math.ceil(minT / 3600) * 3600; t <= maxT; t += 6 * 3600) xTickDts.push(t)
@@ -116,8 +122,8 @@ export default function TideChart({ tides }: TideChartProps) {
           return (
             <g key={h}>
               <line x1={PAD_LEFT} y1={y} x2={W - PAD_RIGHT} y2={y}
-                stroke="#334155" strokeWidth="0.5" strokeDasharray="3,3" />
-              <text x={PAD_LEFT - 4} y={y + 3.5} textAnchor="end" fontSize="7" fill="#64748b">
+                stroke="#334155" strokeWidth="0.6" strokeDasharray="4,3" />
+              <text x={PAD_LEFT - 5} y={y + 4} textAnchor="end" fontSize="9" fill="#64748b">
                 {h.toFixed(1)}m
               </text>
             </g>
@@ -130,9 +136,9 @@ export default function TideChart({ tides }: TideChartProps) {
           if (x < PAD_LEFT || x > W - PAD_RIGHT) return null
           return (
             <g key={dt}>
-              <line x1={x} y1={PAD_TOP + innerH} x2={x} y2={PAD_TOP + innerH + 3}
-                stroke="#475569" strokeWidth="0.8" />
-              <text x={x} y={H - 4} textAnchor="middle" fontSize="7" fill="#64748b">
+              <line x1={x} y1={PAD_TOP + innerH} x2={x} y2={PAD_TOP + innerH + 4}
+                stroke="#475569" strokeWidth="1" />
+              <text x={x} y={H - 5} textAnchor="middle" fontSize="9" fill="#64748b">
                 {format(new Date(dt * 1000), 'HH:mm')}
               </text>
             </g>
@@ -143,8 +149,8 @@ export default function TideChart({ tides }: TideChartProps) {
         <path d={areaD} fill="url(#tide-grad)" clipPath="url(#chart-clip)" />
 
         {/* Courbe */}
-        <path d={pathD} fill="none" stroke="#38bdf8" strokeWidth="1.8"
-          strokeLinejoin="round" clipPath="url(#chart-clip)" />
+        <path d={pathD} fill="none" stroke="#38bdf8" strokeWidth="2.2"
+          strokeLinejoin="round" strokeLinecap="round" clipPath="url(#chart-clip)" />
 
         {/* Marqueurs PM / BM */}
         {visibleEvents.map((ev, i) => {
@@ -154,18 +160,18 @@ export default function TideChart({ tides }: TideChartProps) {
           const isPM = ev.type === 'PM'
           return (
             <g key={i}>
-              <circle cx={x} cy={y} r="3.5"
-                fill={isPM ? '#38bdf8' : '#475569'} stroke="#0f172a" strokeWidth="1" />
-              <text x={x} y={isPM ? y - 5  : y + 10} textAnchor="middle" fontSize="7"
+              <circle cx={x} cy={y} r="5"
+                fill={isPM ? '#38bdf8' : '#475569'} stroke="#0f172a" strokeWidth="1.5" />
+              <text x={x} y={isPM ? y - 8 : y + 14} textAnchor="middle" fontSize="10" fontWeight="600"
                 fill={isPM ? '#7dd3fc' : '#94a3b8'}>
                 {ev.type} {ev.height.toFixed(2)}m
               </text>
               {ev.coefficient != null && (
-                <text x={x} y={isPM ? y - 13 : y + 18} textAnchor="middle" fontSize="6.5" fill="#64748b">
+                <text x={x} y={isPM ? y - 20 : y + 26} textAnchor="middle" fontSize="9" fill="#64748b">
                   coef.{ev.coefficient}
                 </text>
               )}
-              <text x={x} y={isPM ? y - 21 : y + 25} textAnchor="middle" fontSize="6.5" fill="#475569">
+              <text x={x} y={isPM ? y - 31 : y + 37} textAnchor="middle" fontSize="9" fill="#475569">
                 {format(new Date(ev.dt * 1000), 'HH:mm', { locale: fr })}
               </text>
             </g>
@@ -176,8 +182,8 @@ export default function TideChart({ tides }: TideChartProps) {
         {nowX !== null && (
           <g>
             <line x1={nowX} y1={PAD_TOP} x2={nowX} y2={PAD_TOP + innerH}
-              stroke="#f59e0b" strokeWidth="1.2" strokeDasharray="3,2" />
-            <text x={nowX + 3} y={PAD_TOP + 9} fontSize="6.5" fill="#f59e0b">
+              stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="4,3" />
+            <text x={nowX + 4} y={PAD_TOP + 11} fontSize="9" fill="#f59e0b" fontWeight="600">
               maintenant
             </text>
           </g>

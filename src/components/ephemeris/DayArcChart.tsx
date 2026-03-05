@@ -8,11 +8,11 @@ interface DayArcChartProps {
 }
 
 const W = 340
-const H = 68
+const H = 110
 const PAD_LEFT = 10
 const PAD_RIGHT = 10
-const PAD_TOP = 10
-const PAD_BOTTOM = 18
+const PAD_TOP = 22   // espace pour les étiquettes au-dessus
+const PAD_BOTTOM = 22
 
 const BAR_H = H - PAD_TOP - PAD_BOTTOM  // hauteur de la bande colorée
 
@@ -143,53 +143,63 @@ export default function DayArcChart({ eph, date = new Date() }: DayArcChartProps
           rx="2"
         />
 
-        {/* Marqueurs soleil */}
+        {/* Marqueurs soleil — lever (▲ au-dessus + heure) */}
         {sunrise !== null && (
           <g>
-            {/* Triangle lever ▲ au-dessus */}
+            <line x1={toX(sunrise)} y1={barY} x2={toX(sunrise)} y2={barY + BAR_H}
+              stroke="#fbbf24" strokeWidth="1.2" strokeDasharray="3,2" opacity="0.7" />
             <polygon
-              points={`${toX(sunrise)},${barY - 1} ${toX(sunrise) - 3.5},${barY - 7} ${toX(sunrise) + 3.5},${barY - 7}`}
+              points={`${toX(sunrise)},${barY - 2} ${toX(sunrise) - 5},${barY - 10} ${toX(sunrise) + 5},${barY - 10}`}
               fill="#fbbf24"
             />
-            <text
-              x={toX(sunrise)} y={barY - 8}
-              textAnchor="middle" fontSize="6" fill="#fbbf24"
-            >
+            <text x={toX(sunrise)} y={barY - 12}
+              textAnchor="middle" fontSize="8" fill="#fbbf24" fontWeight="600">
               {format(eph.sunrise!, 'HH:mm')}
             </text>
           </g>
         )}
+        {/* Coucher soleil (▼ en dessous + heure) */}
         {sunset !== null && (
           <g>
-            {/* Triangle coucher ▼ en dessous */}
+            <line x1={toX(sunset)} y1={barY} x2={toX(sunset)} y2={barY + BAR_H}
+              stroke="#fb923c" strokeWidth="1.2" strokeDasharray="3,2" opacity="0.7" />
             <polygon
-              points={`${toX(sunset)},${barY + BAR_H + 1} ${toX(sunset) - 3.5},${barY + BAR_H + 7} ${toX(sunset) + 3.5},${barY + BAR_H + 7}`}
+              points={`${toX(sunset)},${barY + BAR_H + 2} ${toX(sunset) - 5},${barY + BAR_H + 10} ${toX(sunset) + 5},${barY + BAR_H + 10}`}
               fill="#fb923c"
             />
+            <text x={toX(sunset)} y={barY + BAR_H + 20}
+              textAnchor="middle" fontSize="8" fill="#fb923c" fontWeight="600">
+              {format(eph.sunset!, 'HH:mm')}
+            </text>
           </g>
         )}
         {solar_noon !== null && (
           <line
             x1={toX(solar_noon)} y1={barY + 2}
             x2={toX(solar_noon)} y2={barY + BAR_H - 2}
-            stroke="#fde68a" strokeWidth="0.8" strokeDasharray="2,2"
+            stroke="#fde68a" strokeWidth="1" strokeDasharray="2,2"
           />
         )}
 
-        {/* Marqueurs lune (losanges) */}
+        {/* Marqueurs lune — lever (losange gris clair + heure) */}
         {moonrise !== null && (
           <g>
             <polygon
-              points={`${toX(moonrise)},${barY + BAR_H + 1} ${toX(moonrise) - 3},${barY + BAR_H + 5} ${toX(moonrise)},${barY + BAR_H + 9} ${toX(moonrise) + 3},${barY + BAR_H + 5}`}
+              points={`${toX(moonrise)},${barY - 2} ${toX(moonrise) - 4},${barY - 8} ${toX(moonrise)},${barY - 14} ${toX(moonrise) + 4},${barY - 8}`}
               fill="#94a3b8"
             />
+            <text x={toX(moonrise)} y={barY + BAR_H + 20}
+              textAnchor="middle" fontSize="7" fill="#94a3b8">
+              🌙{format(eph.moonrise!, 'HH:mm')}
+            </text>
           </g>
         )}
+        {/* Coucher lune (losange sombre) */}
         {moonset !== null && (
           <g>
             <polygon
-              points={`${toX(moonset)},${barY + BAR_H + 1} ${toX(moonset) - 3},${barY + BAR_H + 5} ${toX(moonset)},${barY + BAR_H + 9} ${toX(moonset) + 3},${barY + BAR_H + 5}`}
-              fill="#475569"
+              points={`${toX(moonset)},${barY + BAR_H + 2} ${toX(moonset) - 4},${barY + BAR_H + 8} ${toX(moonset)},${barY + BAR_H + 14} ${toX(moonset) + 4},${barY + BAR_H + 8}`}
+              fill="#64748b"
             />
           </g>
         )}

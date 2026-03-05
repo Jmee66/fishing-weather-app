@@ -86,7 +86,14 @@ export default function EphemeridePage() {
 
       {today && (
         <Card>
-          <p className="text-xs text-slate-500 mb-2">Chronogramme jour · aube · nuit</p>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-sm font-semibold text-slate-200">Chronogramme solaire & lunaire</p>
+            <div className="flex items-center gap-3 text-[10px] text-slate-500">
+              <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-sm bg-amber-400"/>Soleil</span>
+              <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-sm bg-slate-400"/>Lune</span>
+              <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-sm bg-green-500 opacity-70"/>Pêche</span>
+            </div>
+          </div>
           <DayArcChart eph={today} date={new Date()} />
         </Card>
       )}
