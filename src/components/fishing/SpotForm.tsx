@@ -47,9 +47,14 @@ interface SpotFormProps {
 }
 
 export default function SpotForm({ initialCoords, spotToEdit, onSave, onClose }: SpotFormProps) {
-  const activeCoords = useLocationStore((s) => s.getActiveLocation())
-  const defaultLat = initialCoords?.lat ?? spotToEdit?.coordinates.lat ?? activeCoords?.lat ?? 0
-  const defaultLon = initialCoords?.lon ?? spotToEdit?.coordinates.lon ?? activeCoords?.lon ?? 0
+  // Sélectionner les primitives directement pour éviter une boucle infinie
+  // (appeler getActiveLocation() dans le sélecteur retourne un nouvel objet à chaque rendu)
+  const selectedLat = useLocationStore((s) => s.selectedLocation?.lat)
+  const selectedLon = useLocationStore((s) => s.selectedLocation?.lon)
+  const currentLat  = useLocationStore((s) => s.currentPosition?.lat)
+  const currentLon  = useLocationStore((s) => s.currentPosition?.lon)
+  const defaultLat = initialCoords?.lat ?? spotToEdit?.coordinates.lat ?? selectedLat ?? currentLat ?? 0
+  const defaultLon = initialCoords?.lon ?? spotToEdit?.coordinates.lon ?? selectedLon ?? currentLon ?? 0
 
   const [techniques, setTechniques] = useState<FishingTechnique[]>(spotToEdit?.techniques ?? [])
   const [species, setSpecies] = useState<string[]>(spotToEdit?.species ?? [])
